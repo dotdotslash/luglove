@@ -30,11 +30,6 @@
 
 		<script src="js/libs/dat.gui.min.js"></script>
 
-		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> - webgl environment mapping example<br/>
-			Equirectangular Map by <a href="http://gl.ict.usc.edu/Data/HighResProbes/">University of Southern California</a><br/>
-			Spherical Map by <a href="http://www.pauldebevec.com/Probes/">Paul Debevec</a>
-		</div>
 
 		<script>
 
@@ -71,7 +66,7 @@
 				scene.add(ambient);
 				
 				
-				var directionalLight = new THREE.DirectionalLight( 0xffc58f, 0.75 );
+				var directionalLight = new THREE.DirectionalLight( 0xffc58f, 0.3 );
 				directionalLight.position.set( 0, 1, 0 );
 				scene.add( directionalLight );
 
@@ -172,7 +167,7 @@
 					roughness: 0.75,
 					refractionRatio: 2.0,
 					envMap: customSphere,
-					envMapIntensity: 1.5,
+					envMapIntensity: 1.75,
 					map: mrBumpy,
 					bumpMap: mrBumpy,
 					bumpScale: 1,
@@ -213,35 +208,17 @@
 						sphereMaterial.needsUpdate = true;
 					},
 					Custom: function () {
-						cubeMesh.material = equirectMaterial;
-						cubeMesh.visible = true;
+						cubeMesh.material = false;
+						cubeMesh.visible = false;
 						sphereMaterial.envMap = textureEquirec;
 						sphereMaterial.needsUpdate = true;
-					},
-					Refraction: false
+					}
 				};
 
 				var gui = new dat.GUI();
 				gui.add( params, 'Cube' );
 				gui.add( params, 'Equirectangular' );
 				gui.add( params, 'Custom' );
-				gui.add( params, 'Refraction' ).onChange( function( value ) {
-
-					if ( value ) {
-
-						textureEquirec.mapping = THREE.EquirectangularRefractionMapping;
-						textureCube.mapping = THREE.CubeRefractionMapping;
-
-					} else {
-
-						textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
-						textureCube.mapping = THREE.CubeReflectionMapping;
-
-					}
-
-					sphereMaterial.needsUpdate = true;
-
-				} );
 				gui.open();
 
 				window.addEventListener( 'resize', onWindowResize, false );
