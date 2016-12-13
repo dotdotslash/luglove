@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - materials - cube reflection [cars]</title>
+		<title>Custom</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -40,7 +40,7 @@
 
 			var controls, camera, scene, renderer;
 			var cameraCube, sceneCube;
-			var textureEquirec, textureCube, textureSphere;
+			var textureEquirec, textureCube, textureSphere, customSphere, mrBumpy, crapMap;
 			var cubeMesh, sphereMesh;
 			var sphereMaterial;
 			var refract;
@@ -68,7 +68,12 @@
 				// Lights
 
 				var ambient = new THREE.AmbientLight( 0xffffff );
-				scene.add( ambient );
+				scene.add(ambient);
+				
+				
+				var directionalLight = new THREE.DirectionalLight( 0xffc58f, 0.75 );
+				directionalLight.position.set( 0, 1, 0 );
+				scene.add( directionalLight );
 
 				// Textures
 
@@ -82,7 +87,6 @@
 				textureCube.mapping = THREE.CubeReflectionMapping;
 
 				var textureLoader = new THREE.TextureLoader();
-				var maxAnisotropy = renderer.getMaxAnisotropy();
 
 				textureEquirec = textureLoader.load( "textures/2294472375_24a3b8ef46_o.jpg" );
 				textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
@@ -90,9 +94,12 @@
 				textureEquirec.minFilter = THREE.LinearMipMapLinearFilter;
 
 				textureSphere = textureLoader.load( "textures/metal.jpg" );
-				//textureSphere.anisotropy = maxAnisotropy;
-				
 				textureSphere.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				
+				
+				
 
 				// Materials
 
@@ -103,9 +110,9 @@
 					vertexShader: equirectShader.vertexShader,
 					uniforms: equirectShader.uniforms,
 					depthWrite: false,
-					side: THREE.BackSide
+					side: THREE.BackSide,
+				//	
 				} );
-
 				equirectMaterial.uniforms[ "tEquirect" ].value = textureEquirec;
 
 				var cubeShader = THREE.ShaderLib[ "cube" ];
@@ -127,14 +134,63 @@
 				//
 
 				var geometry = new THREE.SphereGeometry( 400.0, 24, 24 );
-				sphereMaterial = new THREE.MeshLambertMaterial( { envMap: textureCube } );
+				//sphereMaterial = new THREE.MeshLambertMaterial( { envMap: textureCube } );
+				
+				
+				
+				
+				customSphere = textureLoader.load( "textures/2294472375_24a3b8ef46_o.jpg" );
+				customSphere.mapping = THREE.EquirectangularReflectionMapping;
+				customSphere.magFilter = THREE.LinearFilter;
+				customSphere.minFilter = THREE.LinearMipMapLinearFilter;
+			//	customSphere.anisotropy = maxAnisotropy;
+				customSphere.anisotropy = 2.0;
+				
+				
+				//mrBumpy = textureLoader.load( "textures/brushed.gif" );
+				//mrBumpy = textureLoader.load( "textures/alum.jpg" );
+				mrBumpy = textureLoader.load("textures/scrapes-01.png");
+				//mrBumpy = textureLoader.load("textures/scrapes-02.png");
+				mrBumpy.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				crapMap = textureLoader.load("textures/scrapes-02.png");
+				crapMap.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				/* ******************************
+				MATERIALLLLLLLLLLLLLLLLLLLL 
+				*******************************/
+				
+				sphereMaterial = new THREE.MeshStandardMaterial( {
+					//map: crapMap,
+					bumpScale: 3,
+					color:  0xa5a5a5,
+					emissive: 0x000000,
+					emissiveIntensity: 0.7,
+					metalness: 1.0,
+					roughness: 0.75,
+					refractionRatio: 2.0,
+					envMap: customSphere,
+					envMapIntensity: 1.5,
+					map: mrBumpy,
+					bumpMap: mrBumpy,
+					bumpScale: 1,
+					shading: THREE.SmoothShading
+				} );
+				
+				/* ******************************
+				MATERIALLLLLLLLLLLLLLLLLLLL 
+				*******************************/
+				
+				
 				sphereMesh = new THREE.Mesh( geometry, sphereMaterial );
 
 				scene.add( sphereMesh );
 
 				//
 
-				renderer = new THREE.WebGLRenderer();
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.autoClear = false;
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -156,9 +212,10 @@
 						sphereMaterial.envMap = textureEquirec;
 						sphereMaterial.needsUpdate = true;
 					},
-					Spherical: function () {
-							cubeMesh.visible = false;
-						sphereMaterial.envMap = textureSphere;
+					Custom: function () {
+						cubeMesh.material = equirectMaterial;
+						cubeMesh.visible = true;
+						sphereMaterial.envMap = textureEquirec;
 						sphereMaterial.needsUpdate = true;
 					},
 					Refraction: false
@@ -167,7 +224,7 @@
 				var gui = new dat.GUI();
 				gui.add( params, 'Cube' );
 				gui.add( params, 'Equirectangular' );
-				gui.add( params, 'Spherical' );
+				gui.add( params, 'Custom' );
 				gui.add( params, 'Refraction' ).onChange( function( value ) {
 
 					if ( value ) {
