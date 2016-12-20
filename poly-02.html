@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Lines test</title>
+	<title>Poly 02</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -11,6 +11,7 @@
 <script src="js/three.js"></script>
 <script src="js/Detector.js"></script>
 <script src="js/stats.min.js"></script>
+<script src="js/ImprovedNoise.js"></script>
 <script src="js/controls/OrbitControls.js"></script>
 
 <div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
@@ -21,6 +22,13 @@ var container, scene, camera, renderer, controls, stats;
 var clock = new THREE.Clock();
 // custom global variables
 var cube;
+
+
+var worldWidth = 256, worldDepth = 256,
+	worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
+
+var clock = new THREE.Clock();
+
 
 init();
 animate();
@@ -60,12 +68,16 @@ function init() {
 	
 	// LIGHT
 	var light = new THREE.PointLight(0xffffff);
-	light.position.set(0,250,0);
+	light.position.set(0,3000,0);
 	scene.add(light);
+	
+
+	
+
 	
 	// FLOOR
 	// don't add floor -- easier to view result.
-	scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
+	//scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
 	
 	
 	////////////
@@ -102,14 +114,70 @@ function init() {
 	var lineMaterial = new THREE.LineDashedMaterial( { color: 0x00FFFF, dashSize: 4, gapSize: 2 } );
 	var line = new THREE.Line( lineGeometry, lineMaterial );
 	scene.add(line);
+	
+	
+	
+	////////////
+	// Plane Geometry //
+	////////////
+	var x = 0;
+	var y = 0;
+	var z = 0;
+	for(i=0; i <10; i++) {
+		x = 10*i;
+		for(j=0; j <10; j++) {
+			
+			for(k=0; k <10; k++) { 
+			
+			}
+			
+			var geometryA = new THREE.Geometry();
+			var geometryB = new THREE.Geometry();
+			y = 10*j;
+			
 		
+			var v1a = new THREE.Vector3(x,y,z);
+			var v2a = new THREE.Vector3(x+10, y, z);
+			var v3a = new THREE.Vector3(x+10, y+10, z); //Top Right
+			geometryA.vertices.push(v1a);
+			geometryA.vertices.push(v2a);
+			geometryA.vertices.push(v3a);
+		
+			geometryA.faces.push( new THREE.Face3( 0, 1, 2 ) );
+			geometryA.computeFaceNormals();
+			var freshMesh = new THREE.Mesh( geometryA, new THREE.MeshNormalMaterial({wireframe: false}) );
+			scene.add(freshMesh);
+		
+		
+			var v1b = new THREE.Vector3(x,y,z);
+			var v2b = new THREE.Vector3(10+x, y+10, z); //Top Right
+			var v3b = new THREE.Vector3(x, y+10, z);
+			geometryB.vertices.push( v1b );
+			geometryB.vertices.push( v2b );
+			geometryB.vertices.push( v3b );
+		
+			geometryB.faces.push( new THREE.Face3( 0, 1, 2 ) );
+			geometryB.computeFaceNormals();
+			var meshB = new THREE.Mesh( geometryB, new THREE.MeshNormalMaterial({wireframe: false}) );
+			
+			console.log(geometryB.vertices);
+			
+			scene.add(meshB);
+		}
+		
+		
+		
+	
+	}
+		
+	
 	
 	
 	
 	////////////
 	// Shapes //
 	////////////
-
+/*
 	var cubeGeometry = new THREE.CubeGeometry( 50, 50, 50 );
 	// use LineBasicMaterial if no dashes are desired
 	var dashMaterial = new THREE.LineDashedMaterial( { color: 0xFFFFFF, dashSize: 2, gapSize: 3 } );
@@ -121,10 +189,101 @@ function init() {
 	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, wireframe: true} );
 	var sphere = new THREE.Mesh( geometry, material );
 	scene.add( sphere );
+	*/
 	
 	window.addEventListener( 'resize', onWindowResize, false );
 	
 }
+
+
+function generateTexture( data, width, height ) {
+
+	var canvas, canvasScaled, context, image, imageData,
+	level, diff, vector3, sun, shade;
+
+	vector3 = new THREE.Vector3( 0, 0, 0 );
+
+	sun = new THREE.Vector3( 1, 1, 1 );
+	sun.normalize();
+
+	canvas = document.createElement( 'canvas' );
+	canvas.width = width;
+	canvas.height = height;
+
+	context = canvas.getContext( '2d' );
+	context.fillStyle = '#000';
+	context.fillRect( 0, 0, width, height );
+
+	image = context.getImageData( 0, 0, canvas.width, canvas.height );
+	imageData = image.data;
+
+	for ( var i = 0, j = 0, l = imageData.length; i < l; i += 4, j ++ ) {
+		vector3.x = 1;
+		vector3.y = 2;
+		vector3.z = 3;
+		/*
+		vector3.x = data[ j - 2 ] - data[ j + 2 ];
+		vector3.y = 2;
+		vector3.z = data[ j - width * 2 ] - data[ j + width * 2 ];
+		*/
+		vector3.normalize();
+
+		shade = vector3.dot( sun );
+
+		imageData[ i ] = ( 96 + shade * 128 ) * ( 0.5 + data[ j ] * 0.017 );
+		imageData[ i + 1 ] = ( 32 + shade * 96 ) * ( 0.5 + data[ j ] * 0.107 );
+		imageData[ i + 2 ] = ( shade * 96 ) * ( 0.5 + data[ j ] * 0.017 );
+	}
+
+	context.putImageData( image, 0, 0 );
+
+	// Scaled 4x
+	canvasScaled = document.createElement( 'canvas' );
+	canvasScaled.width = width * 4;
+	canvasScaled.height = height * 4;
+
+	context = canvasScaled.getContext( '2d' );
+	context.scale( 4, 4 );
+	context.drawImage( canvas, 0, 0 );
+
+	image = context.getImageData( 0, 0, canvasScaled.width, canvasScaled.height );
+	imageData = image.data;
+
+	for ( var i = 0, l = imageData.length; i < l; i += 4 ) {
+		var v = ~~ ( Math.random() * 5 );
+		imageData[ i ] += v;
+		imageData[ i + 1 ] += v;
+		imageData[ i + 2 ] += v;
+	}
+
+	context.putImageData( image, 0, 0 );
+
+	return canvasScaled;
+
+}
+
+function generateHeight( width, height ) {
+
+	var size = width * height, data = new Uint8Array( size ),
+	perlin = new ImprovedNoise(), quality = 1, z = Math.random() * 100;
+
+	for ( var j = 0; j < 4; j ++ ) {
+
+		for ( var i = 0; i < size; i ++ ) {
+
+			var x = i % width, y = ~~ ( i / width );
+			data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
+
+		}
+
+		quality *= 5;
+
+	}
+
+	return data;
+
+}
+			
 
 function animate() {
     requestAnimationFrame( animate );
