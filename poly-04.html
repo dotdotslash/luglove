@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Poly 03</title>
+	<title>Poly 04</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -22,12 +22,12 @@ var container, scene, camera, renderer, controls, stats;
 var clock = new THREE.Clock();
 // custom global variables
 var cube;
-
+var mesh = null;
+var savedGeo = null;
 
 var worldWidth = 256, worldDepth = 256,
 	worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
 
-var clock = new THREE.Clock();
 
 
 init();
@@ -37,6 +37,8 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
+	
+	
 	
 	// CAMERA
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
@@ -67,7 +69,6 @@ function init() {
 	container.appendChild( stats.domElement );
 	
 	// LIGHT
-
 	var lights = [];
 	lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
 	lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
@@ -123,18 +124,58 @@ function init() {
 	// Plane Geometry //
 	////////////
 	
-	var letter = [];
+	var letter = [
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]],
+		[[0,0,0,0,0,0,0,0,0,0]]
+	];
 	
-	
+
     var geometry = new THREE.PlaneGeometry(60, 60, 10, 10);
-	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
-	/*
+		geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+	/*	
+		var geo = new THREE.Geometry();
+		geo.vertices.push(
+		    new THREE.Vector3(0,0,0),//vertex0
+		    new THREE.Vector3(50, 0, 0),//1
+		    new THREE.Vector3(25, 50, 10)//2
+		);
+			
+		geo.faces.push( new THREE.Face3(0,1,2));
+		
+		var geo2 = new THREE.Geometry();
+		geo2.vertices.push(
+		    new THREE.Vector3(0,100,0),//vertex0
+		    new THREE.Vector3(0, 0, 0),//1
+		    new THREE.Vector3(50, 50, 0)//2
+		);
+			
+		geo2.faces.push( new THREE.Face3(0,1,2));
+	
+		geo.merge(geo2);
+			
+		geo.computeFaceNormals();
+		var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
+		var freshMesh = new THREE.Mesh( geo, material );
+		scene.add(freshMesh);
+		*/
+	
+			
+	
+	
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 	  geometry.vertices[i].z = Math.random() * 10;
 	}
-	*/
-
 	
+
+	/*
 	geometry.vertices[24].z = 10;
 	geometry.vertices[25].z = 10;
 	geometry.vertices[26].z = 10;
@@ -158,21 +199,59 @@ function init() {
 	geometry.vertices[71].z = 10;
 	geometry.vertices[82].z = 10;
 	geometry.vertices[93].z = 10;
+	*/
+		geometry.vertices[24].z = 20;
+		geometry.vertices[25].z = 20;
+		geometry.vertices[26].z = 20;
+		geometry.vertices[27].z = 20;
+		geometry.vertices[28].z = 20;
+		geometry.vertices[29].z = 20;
+		geometry.vertices[30].z = 20;
+		
+		
+		geometry.vertices[35].z = 20;
+		geometry.vertices[36].z = 20;
+		geometry.vertices[37].z = 20;
+		geometry.vertices[39].z = 20;
+		geometry.vertices[40].z = 20;
+		geometry.vertices[41].z = 20;
+
+		geometry.vertices[38].z = 20;
+
+		geometry.vertices[49].z = 20;
+		geometry.vertices[50].z = 20;
+			
+		geometry.vertices[60].z = 20;
+		geometry.vertices[61].z = 20;
+		
+		geometry.vertices[71].z = 20;
+		geometry.vertices[72].z = 20;
+		
+		geometry.vertices[82].z = 20;
+		geometry.vertices[83].z = 20;
+		
+		geometry.vertices[93].z = 20;
+		geometry.vertices[94].z = 20;
+
 
 	
 	geometry.computeFaceNormals();
+	geometry.verticesNeedUpdate = true;
+    geometry.dynamic = true;
 	
-	//var material = new THREE.MeshPhongMaterial( {color: 0xffffff, side: THREE.DoubleSide, wireframe: true} );
-	//var material = new THREE.MeshNormalMaterial({wireframe: false,side: THREE.DoubleSide, shading: THREE.FlatShading});
+	savedGeo = geometry.clone();
 	
 	var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
 					
-	var meshB = new THREE.Mesh( geometry, material );	
+		mesh = new THREE.Mesh( geometry, material );	
+	//meshB.position.x = 100;
+	
+	scene.add(mesh);
 	
 	
-	scene.add(meshB);
 	
-	
+	//mesh.rotation.x += 0.005;
+	//mesh.rotation.y += 0.005;
 		
 	
 	
@@ -199,96 +278,6 @@ function init() {
 	
 }
 
-
-function generateTexture( data, width, height ) {
-
-	var canvas, canvasScaled, context, image, imageData,
-	level, diff, vector3, sun, shade;
-
-	vector3 = new THREE.Vector3( 0, 0, 0 );
-
-	sun = new THREE.Vector3( 1, 1, 1 );
-	sun.normalize();
-
-	canvas = document.createElement( 'canvas' );
-	canvas.width = width;
-	canvas.height = height;
-
-	context = canvas.getContext( '2d' );
-	context.fillStyle = '#000';
-	context.fillRect( 0, 0, width, height );
-
-	image = context.getImageData( 0, 0, canvas.width, canvas.height );
-	imageData = image.data;
-
-	for ( var i = 0, j = 0, l = imageData.length; i < l; i += 4, j ++ ) {
-		vector3.x = 1;
-		vector3.y = 2;
-		vector3.z = 3;
-		/*
-		vector3.x = data[ j - 2 ] - data[ j + 2 ];
-		vector3.y = 2;
-		vector3.z = data[ j - width * 2 ] - data[ j + width * 2 ];
-		*/
-		vector3.normalize();
-
-		shade = vector3.dot( sun );
-
-		imageData[ i ] = ( 96 + shade * 128 ) * ( 0.5 + data[ j ] * 0.017 );
-		imageData[ i + 1 ] = ( 32 + shade * 96 ) * ( 0.5 + data[ j ] * 0.107 );
-		imageData[ i + 2 ] = ( shade * 96 ) * ( 0.5 + data[ j ] * 0.017 );
-	}
-
-	context.putImageData( image, 0, 0 );
-
-	// Scaled 4x
-	canvasScaled = document.createElement( 'canvas' );
-	canvasScaled.width = width * 4;
-	canvasScaled.height = height * 4;
-
-	context = canvasScaled.getContext( '2d' );
-	context.scale( 4, 4 );
-	context.drawImage( canvas, 0, 0 );
-
-	image = context.getImageData( 0, 0, canvasScaled.width, canvasScaled.height );
-	imageData = image.data;
-
-	for ( var i = 0, l = imageData.length; i < l; i += 4 ) {
-		var v = ~~ ( Math.random() * 5 );
-		imageData[ i ] += v;
-		imageData[ i + 1 ] += v;
-		imageData[ i + 2 ] += v;
-	}
-
-	context.putImageData( image, 0, 0 );
-
-	return canvasScaled;
-
-}
-
-function generateHeight( width, height ) {
-
-	var size = width * height, data = new Uint8Array( size ),
-	perlin = new ImprovedNoise(), quality = 1, z = Math.random() * 100;
-
-	for ( var j = 0; j < 4; j ++ ) {
-
-		for ( var i = 0; i < size; i ++ ) {
-
-			var x = i % width, y = ~~ ( i / width );
-			data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
-
-		}
-
-		quality *= 5;
-
-	}
-
-	return data;
-
-}
-			
-
 function animate() {
     requestAnimationFrame( animate );
 	render();		
@@ -296,37 +285,51 @@ function animate() {
 }
 
 function update() {
+	
+	
+	//mesh.rotation.x += 0.005;
+	/*	mesh.rotation.y += 0.005;
+	mesh.rotation.z += 0.005;
+	*/
+	var t = clock.getElapsedTime();
+	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
+		//console.log(t);
+		//mesh.geometry.vertices[i].z += 0.005;
+		// Math.random()
+		/*
+		 = 5 * (1.0 + Math.sin(t));
+		if (mesh.geometry.vertices[i].z > savedGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = 0.5 *t; 
+		}
+		*/
+		var movement = 20 * Math.sin(t*2);
+		
+		mesh.geometry.vertices[i].z = movement; 
+		if (mesh.geometry.vertices[i].z  > savedGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = movement; 
+		} else if (mesh.geometry.vertices[i].z  < savedGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 
+		}
+		
+		
+		
+		//mesh.geometry.vertices[i].z = mesh.geometry.vertices[i].z + (0.2 * Math.sin(t*2))*Math.random()*10;
+	}
+	mesh.geometry.verticesNeedUpdate = true;
+    mesh.geometry.dynamic = true;
+	
+	//console.log( Math.sin(t));
+	
+	
+	
 	controls.update();
 	stats.update();
 }
 
-function render() {
+function render() {				
 	renderer.render( scene, camera );
 }
 
-function geo2line( geo ) {
-    var geometry = new THREE.Geometry();
-    var vertices = geometry.vertices;
-	
-	for ( i = 0; i < geo.faces.length; i++ ) {
-        var face = geo.faces[ i ];
-        if ( face instanceof THREE.Face3 ) {
-            var a = geo.vertices[ face.a ].clone();
-			var b = geo.vertices[ face.b ].clone();
-			var c = geo.vertices[ face.c ].clone();
-            vertices.push( a,b, b,c, c,a );
-        } 
-		else if ( face instanceof THREE.Face4 ) {
-			var a = geo.vertices[ face.a ].clone();
-			var b = geo.vertices[ face.b ].clone();
-			var c = geo.vertices[ face.c ].clone();
-			var d = geo.vertices[ face.d ].clone();
-            vertices.push( a,b, b,c, c,d, d,a );
-        }
-    }
-    geometry.computeLineDistances();
-    return geometry;
-}
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
