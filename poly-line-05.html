@@ -43,7 +43,7 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0xCCF2D4 );
+	scene.background = new THREE.Color( 0xffffff );
 	
 	// CAMERA
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
@@ -144,7 +144,7 @@ function init() {
 	var img = new Image();
 	//img.src = "textures/Heightmap.png";
 	//img.src = "textures/tiny-type.png";
-	img.src = "textures/btb-type.png";
+	img.src = "textures/btb-type-02.png";
 	//img.src = "textures/type-test-11.png";
 	
 	img.onload = function () {
@@ -163,7 +163,6 @@ function init() {
 		// Random Texture
 		for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 			geometry.vertices[i].z = Math.random() * 10;
-			//geometry.vertices[i].z = 0;
 			faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 		}
 	
@@ -189,7 +188,7 @@ function init() {
 		var data = getTypeData(img);
 		for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 			if(data[i] > 0) {
-				geometry.vertices[i].z = data[i] *3 ;
+				geometry.vertices[i].z = data[i] *2 ;
 			}
 			faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 		}
@@ -238,7 +237,7 @@ function init() {
 	
 		savedGeo = geometry.clone();
 	
-		mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
+		mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side : THREE.DoubleSide } ));
 		scene.add(mesh);
 	
 		startAni = true;
@@ -323,11 +322,11 @@ function animate() {
 var doOnce = true;
 function update() {
 	
-	/*
-	mesh.rotation.x += 0.005;
+	
+	//mesh.rotation.x += 0.005;
 	mesh.rotation.y += 0.005;
-	mesh.rotation.z += 0.005;
-	*/
+	//mesh.rotation.z += 0.005;
+
 		
 	var t = clock.getElapsedTime();
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
