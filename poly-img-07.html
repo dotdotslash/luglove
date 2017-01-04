@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Poly Image 05</title>
+	<title>Poly Image 07</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -144,32 +144,7 @@ function init() {
 
     var geometry = new THREE.PlaneGeometry(60, 60, 10, 10);
 		geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
-	/*	
-		var geo = new THREE.Geometry();
-		geo.vertices.push(
-		    new THREE.Vector3(0,0,0),//vertex0
-		    new THREE.Vector3(50, 0, 0),//1
-		    new THREE.Vector3(25, 50, 10)//2
-		);
-			
-		geo.faces.push( new THREE.Face3(0,1,2));
-		
-		var geo2 = new THREE.Geometry();
-		geo2.vertices.push(
-		    new THREE.Vector3(0,100,0),//vertex0
-		    new THREE.Vector3(0, 0, 0),//1
-		    new THREE.Vector3(50, 50, 0)//2
-		);
-			
-		geo2.faces.push( new THREE.Face3(0,1,2));
-	
-		geo.merge(geo2);
-			
-		geo.computeFaceNormals();
-		var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
-		var freshMesh = new THREE.Mesh( geo, material );
-		scene.add(freshMesh);
-		*/
+
 
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		geometry.vertices[i].z = Math.random() * 10;
@@ -282,10 +257,6 @@ function init() {
 	*/
 	
 	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
-					
-		//mesh = new THREE.Mesh( geometry, material );	
-	//meshB.position.x = 100;
-	
 	scene.add(mesh);
 	
 	
@@ -341,16 +312,24 @@ function update() {
 
 		mesh.geometry.vertices[i].z = movement; 
 		
-		if (movement > savedGeo.vertices[i].z) {
+		if (movement >= savedGeo.vertices[i].z) {
 			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 
-			faceColors[i] = "#FF0000";
 			//faceColors[i] = colors[Math.floor(savedGeo.vertices[i].z)];
 			
-		} else if (movement < baseGeo.vertices[i].z) {
+			
+		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
 			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;
-			faceColors[i] = "#FFFF00";
+			
 			//faceColors[i] = colors[Math.floor(baseGeo.vertices[i].z )];
 		}
+		if (movement > baseGeo.vertices[i].z) { 
+			//faceColors[i] = "#FF00FF";
+		} else {
+			
+		}
+		
+		faceColors[i] = colors[Math.floor(mesh.geometry.vertices[i].z)];
+		
 	}
 	
 	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
@@ -363,10 +342,6 @@ function update() {
 		
 		var newColorC = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);
 		mesh.geometry.faces[i].vertexColors[2].copy(newColorC); 
-		/*
-		mesh.geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
-		mesh.geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[mesh.geometry.faces[i].b]);
-		mesh.geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);*/
 	}
 
 	
