@@ -26,8 +26,9 @@ var mesh = null;
 var baseGeo = null;
 var savedGeo = null;
 
-var colors = ["#eef4f8","#ddecf4","#cce5f0","#bcddec","#aed5e7","#a0cde2","#94c5dc","#89bcd6","#7eb4d0","#74abc9","#6aa2c2","#619abb","#5892b4","#4f8aad","#4781a6","#3f799f","#3a7195","#35688c","#326082","#2f5877","#2c506c","#243d52"];
+//var colors = ["#eef4f8","#ddecf4","#cce5f0","#bcddec","#aed5e7","#a0cde2","#94c5dc","#89bcd6","#7eb4d0","#74abc9","#6aa2c2","#619abb","#5892b4","#4f8aad","#4781a6","#3f799f","#3a7195","#35688c","#326082","#2f5877","#2c506c","#243d52"];
 
+var colors = ["#CCF2D4", "#C1EDCA", "#B7E9C1", "#ADE4B8", "#A3E0AF", "#99DCA5", "#8FD79C", "#85D393", "#7BCF8A", "#71CA80", "#67C677", "#5CC26E", "#52BD65", "#48B95B", "#3EB552", "#34B049", "#2AAC3F", "#20A836", "#16A32D", "#0C9F24", "#029B1B"];
 
 var faceColors = [];
 	
@@ -234,29 +235,6 @@ function init() {
     geometry.dynamic = true;
 	
 	savedGeo = geometry.clone();
-	
-	
-	//var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
-	
-	/* // FACE COLORS
-	for ( var i = 0; i < geometry.faces.length; i ++ ) {
-		var face = geometry.faces[ i ];
-		//face.color.setHex( Math.random() * 0xffffff );
-		face.color.setHex( geometry.vertices[i].z  * 0xffffff );
-		//geometry.vertices[i].z
-	}
-	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } ));
-	*/	
-	
-	/*
-	geometry.faces[0].vertexColors[0] = new THREE.Color(0xff0000); // red
-	geometry.faces[0].vertexColors[1] = new THREE.Color(0x00ff00); // green
-	geometry.faces[0].vertexColors[2] = new THREE.Color(0x0000ff); // blue
-	
-	geometry.faces[1].vertexColors[0] = new THREE.Color(0xff0000); // red
-	geometry.faces[1].vertexColors[1] = new THREE.Color(0x00ff00); // green
-	geometry.faces[1].vertexColors[2] = new THREE.Color(0x0000ff); // blue
-	*/
 	
 	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
 	scene.add(mesh);

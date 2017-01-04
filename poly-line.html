@@ -20,31 +20,33 @@
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
 var clock = new THREE.Clock();
+
 // custom global variables
 var cube;
 var mesh = null;
 var baseGeo = null;
 var savedGeo = null;
 
-var colors = ["#eef4f8","#ddecf4","#cce5f0","#bcddec","#aed5e7","#a0cde2","#94c5dc","#89bcd6","#7eb4d0","#74abc9","#6aa2c2","#619abb","#5892b4","#4f8aad","#4781a6","#3f799f","#3a7195","#35688c","#326082","#2f5877","#2c506c","#243d52"];
-
-
+// Terrain colors
+var colors = ["#CCF2D4", "#C1EDCA", "#B7E9C1", "#ADE4B8", "#A3E0AF", "#99DCA5", "#8FD79C", "#85D393", "#7BCF8A", "#71CA80", "#67C677", "#5CC26E", "#52BD65", "#48B95B", "#3EB552", "#34B049", "#2AAC3F", "#20A836", "#16A32D", "#0C9F24", "#029B1B"];
 var faceColors = [];
-	
-var worldWidth = 256, worldDepth = 256,
-	worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
 
+var img = new Image();
+	img.src = "textures/Heightmap.png";
+	img.onload = function () {
+		init();
+	};
+		
 
-
-init();
 animate();
 
-// FUNCTIONS 		
+////////////////
+// FUNCTIONS // 	
+//////////////	
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0xffffff );
-	
 	
 	// CAMERA
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
@@ -55,8 +57,8 @@ function init() {
 	camera.lookAt(scene.position);	
 	
 	// RENDERER
-	if ( Detector.webgl )
-		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	if ( Detector.webgl ) 
+		renderer = new THREE.WebGLRenderer({antialias:true});
 	else
 		renderer = new THREE.CanvasRenderer(); 
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -126,9 +128,9 @@ function init() {
 	
 	
 	
-	////////////
+	/////////////////////
 	// Plane Geometry //
-	////////////
+	///////////////////
 	
 	var letter = [
 		[[0,0,0,0,0,0,0,0,0,0]],
@@ -147,52 +149,41 @@ function init() {
     var geometry = new THREE.PlaneGeometry(60, 60, 10, 10);
 		geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
 
-
+		
+/*
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		geometry.vertices[i].z = Math.random() * 10;
 		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
-		
 	}
+	*/
+
+	var data = getHeightData(img);
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		geometry.vertices[i].z = data[i] ;
+		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
+	}
+	console.log(geometry);
+
+	console.log(geometry);	
+		
+		
 	for (var i = 0, l = geometry.faces.length; i < l; i++) {
 		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
 		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
 		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
 	}
 	
-	geometry.faces[0].vertexColors[0] = new THREE.Color(0xFF0000);
+	//geometry.faces[0].vertexColors[0] = new THREE.Color(0xFF0000);
 	
 	console.log(faceColors);
 	console.log(geometry.faces[0].vertexColors[0]);
 	
 	baseGeo = geometry.clone();
 
-	/*
-	geometry.vertices[24].z = 10;
-	geometry.vertices[25].z = 10;
-	geometry.vertices[26].z = 10;
-	geometry.vertices[27].z = 10;
-	geometry.vertices[28].z = 10;
-	geometry.vertices[29].z = 10;
-	geometry.vertices[30].z = 10;
-	
-	//geometry.vertices[41].z = 10;
-
-	//geometry.vertices[52].z = 10;
-	
-	geometry.vertices[38].z = 10;
-	geometry.vertices[49].z = 10;
-	
-	geometry.vertices[49].z = 10;
-	
-	geometry.vertices[60].z = 10;
-	//geometry.vertices[63].z = 10;
-	
-	geometry.vertices[71].z = 10;
-	geometry.vertices[82].z = 10;
-	geometry.vertices[93].z = 10;
-	*/
 	
 	
+	/*				
+	// Letter Geometry
 		geometry.vertices[24].z = 20;
 		geometry.vertices[25].z = 20;
 		geometry.vertices[26].z = 20;
@@ -200,7 +191,6 @@ function init() {
 		geometry.vertices[28].z = 20;
 		geometry.vertices[29].z = 20;
 		geometry.vertices[30].z = 20;
-		
 		
 		geometry.vertices[35].z = 20;
 		geometry.vertices[36].z = 20;
@@ -225,8 +215,8 @@ function init() {
 		
 		geometry.vertices[93].z = 20;
 		geometry.vertices[94].z = 20;
-
-
+	// END Letter GEO
+	*/
 	
 	geometry.computeFaceNormals();
 	geometry.colorsNeedUpdate = true;
@@ -235,60 +225,37 @@ function init() {
 	
 	savedGeo = geometry.clone();
 	
-	
-	//var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
-	
-	/* // FACE COLORS
-	for ( var i = 0; i < geometry.faces.length; i ++ ) {
-		var face = geometry.faces[ i ];
-		//face.color.setHex( Math.random() * 0xffffff );
-		face.color.setHex( geometry.vertices[i].z  * 0xffffff );
-		//geometry.vertices[i].z
-	}
-	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } ));
-	*/	
-	
-	/*
-	geometry.faces[0].vertexColors[0] = new THREE.Color(0xff0000); // red
-	geometry.faces[0].vertexColors[1] = new THREE.Color(0x00ff00); // green
-	geometry.faces[0].vertexColors[2] = new THREE.Color(0x0000ff); // blue
-	
-	geometry.faces[1].vertexColors[0] = new THREE.Color(0xff0000); // red
-	geometry.faces[1].vertexColors[1] = new THREE.Color(0x00ff00); // green
-	geometry.faces[1].vertexColors[2] = new THREE.Color(0x0000ff); // blue
-	*/
-	
 	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
 	scene.add(mesh);
-	
-	
-	
-	//mesh.rotation.x += 0.005;
-	//mesh.rotation.y += 0.005;
-		
-	
-	
-	
-	
-	////////////
-	// Shapes //
-	////////////
-/*
-	var cubeGeometry = new THREE.CubeGeometry( 50, 50, 50 );
-	// use LineBasicMaterial if no dashes are desired
-	var dashMaterial = new THREE.LineDashedMaterial( { color: 0xFFFFFF, dashSize: 2, gapSize: 3 } );
-	cube = new THREE.Line( geo2line(cubeGeometry), dashMaterial, THREE.LineSegments );
-	cube.position.set(25,25,25);
-	scene.add(cube);
-	
-	var geometry = new THREE.SphereGeometry( 20, 10, 10 );
-	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, wireframe: true} );
-	var sphere = new THREE.Mesh( geometry, material );
-	scene.add( sphere );
-	*/
-	
+
 	window.addEventListener( 'resize', onWindowResize, false );
 	
+}
+
+function getHeightData(img) {
+    var canvas = document.createElement( 'canvas' );
+    canvas.width = 128;
+    canvas.height = 128;
+    var context = canvas.getContext( '2d' );
+
+    var size = 128 * 128, data = new Float32Array( size );
+
+    context.drawImage(img,0,0);
+
+    for ( var i = 0; i < size; i ++ ) {
+        data[i] = 0
+    }
+
+    var imgd = context.getImageData(0, 0, 128, 128);
+    var pix = imgd.data;
+
+    var j=0;
+    for (var i = 0, n = pix.length; i < n; i += (4)) {
+        var all = pix[i]+pix[i+1]+pix[i+2];
+        data[j++] = all/30;
+    }
+
+    return data;
 }
 
 function animate() {
@@ -305,9 +272,7 @@ function update() {
 	mesh.rotation.y += 0.005;
 	mesh.rotation.z += 0.005;
 	*/
-	
-	//mesh.rotation.y += Math.sin(0.005);
-	
+		
 	var t = clock.getElapsedTime();
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
 		var movement = 20 * Math.sin(t*2);
@@ -315,19 +280,9 @@ function update() {
 		mesh.geometry.vertices[i].z = movement; 
 		
 		if (movement >= savedGeo.vertices[i].z) {
-			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 
-			//faceColors[i] = colors[Math.floor(savedGeo.vertices[i].z)];
-			
-			
+			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 					
 		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
-			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;
-			
-			//faceColors[i] = colors[Math.floor(baseGeo.vertices[i].z )];
-		}
-		if (movement > baseGeo.vertices[i].z) { 
-			//faceColors[i] = "#FF00FF";
-		} else {
-			
+			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;			
 		}
 		
 		faceColors[i] = colors[Math.floor(mesh.geometry.vertices[i].z)];
@@ -335,7 +290,6 @@ function update() {
 	}
 	
 	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
-		
 		var newColorA = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
 		mesh.geometry.faces[i].vertexColors[0].copy(newColorA); 
 		
@@ -349,36 +303,13 @@ function update() {
 	
 	
 	if(doOnce) {
-		/*
-		console.log(mesh);
-		console.log(mesh.geometry.faces[0].vertexColors[0] );
-		//mesh.geometry.faces[0].vertexColors[0] = new THREE.Color(0x00FF00);
-		console.log(faceColors);
-		console.log(mesh.geometry.faces[0].vertexColors[0]);
-		
-		var newColor = new THREE.Color(0x00FFFF);
-		mesh.geometry.faces[0].vertexColors[0].copy(shit); 
-		*/
-		// geometry.faces[ i ].vertexColors[ 0 ].copy( color ); // or use set()
-
 		doOnce = false;
 	}
 	
 	//
-	
-	
-	//console.log(faceColors);
-	mesh.geometry.computeFaceNormals();
 	mesh.geometry.colorsNeedUpdate = true;
 	mesh.geometry.verticesNeedUpdate = true;
-	/*
-	mesh.geometry.dirtyColors = true;
-	mesh.geometry.__dirtyVertices = true;
-	mesh.geometry.__dirtyNormals = true;
-	*/
-	
     mesh.geometry.dynamic = true;
-	
 	
 	controls.update();
 	stats.update();
