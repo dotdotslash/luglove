@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Poly Line 04</title>
+	<title>Poly Line 08</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -43,7 +43,7 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0xCCF2D4 );
+	scene.background = new THREE.Color( 0x156289 );
 	
 	// CAMERA
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
@@ -144,7 +144,7 @@ function init() {
 	var img = new Image();
 	//img.src = "textures/Heightmap.png";
 	//img.src = "textures/tiny-type.png";
-	img.src = "textures/btb-type.png";
+	img.src = "textures/long-type.png";
 	//img.src = "textures/type-test-11.png";
 	
 	img.onload = function () {
@@ -163,7 +163,6 @@ function init() {
 		// Random Texture
 		for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 			geometry.vertices[i].z = Math.random() * 10;
-			//geometry.vertices[i].z = 0;
 			faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 		}
 	
@@ -189,56 +188,24 @@ function init() {
 		var data = getTypeData(img);
 		for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 			if(data[i] > 0) {
-				geometry.vertices[i].z = data[i] * 2 ;
+				geometry.vertices[i].z = data[i] *2 ;
 			}
 			faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 		}
-		
-		
-		/*		
-		// Letter Geometry
-			geometry.vertices[24].z = 20;
-			geometry.vertices[25].z = 20;
-			geometry.vertices[26].z = 20;
-			geometry.vertices[27].z = 20;
-			geometry.vertices[28].z = 20;
-			geometry.vertices[29].z = 20;
-			geometry.vertices[30].z = 20;
-		
-			geometry.vertices[35].z = 20;
-			geometry.vertices[36].z = 20;
-			geometry.vertices[37].z = 20;
-			geometry.vertices[39].z = 20;
-			geometry.vertices[40].z = 20;
-			geometry.vertices[41].z = 20;
 
-			geometry.vertices[38].z = 20;
-
-			geometry.vertices[49].z = 20;
-			geometry.vertices[50].z = 20;
-			
-			geometry.vertices[60].z = 20;
-			geometry.vertices[61].z = 20;
-		
-			geometry.vertices[71].z = 20;
-			geometry.vertices[72].z = 20;
-		
-			geometry.vertices[82].z = 20;
-			geometry.vertices[83].z = 20;
-		
-			geometry.vertices[93].z = 20;
-			geometry.vertices[94].z = 20;
-		// END Letter GEO
-		*/
-	
 		geometry.computeFaceNormals();
 		geometry.colorsNeedUpdate = true;
 		geometry.verticesNeedUpdate = true;
 	    geometry.dynamic = true;
 	
 		savedGeo = geometry.clone();
-	
-		mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
+		
+		mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, side : THREE.DoubleSide } ));
+		/*
+		var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
+		mesh = new THREE.Mesh( geometry, material);
+		*/
+		
 		scene.add(mesh);
 	
 		startAni = true;
@@ -323,11 +290,11 @@ function animate() {
 var doOnce = true;
 function update() {
 	
-	/*
-	mesh.rotation.x += 0.005;
-	mesh.rotation.y += 0.005;
-	mesh.rotation.z += 0.005;
-	*/
+	
+	//mesh.rotation.x += 0.005;
+	//mesh.rotation.y += 0.005;
+	//mesh.rotation.z += 0.005;
+
 		
 	var t = clock.getElapsedTime();
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
