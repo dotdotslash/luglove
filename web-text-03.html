@@ -1,0 +1,480 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Text 03</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
+
+<script src="js/three.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/stats.min.js"></script>
+<script src="js/ImprovedNoise.js"></script>
+<script src="js/controls/OrbitControls.js"></script>
+
+<div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+<script>
+
+// standard global variables
+var container, scene, camera, renderer, controls, stats;
+var clock = new THREE.Clock();
+
+// custom global variables
+var cube;
+var mesh = null;
+var baseGeo = null;
+var savedGeo = null;
+var startAni = false;
+
+// Terrain colors
+//var colors = ["#A3E0AF", "#A3E0AF", "#A3E0AF", "#A3E0AF", "#A3E0AF", "#99DCA5", "#8FD79C", "#85D393", "#7BCF8A", "#71CA80", "#67C677", "#5CC26E", "#52BD65", "#48B95B", "#3EB552", "#34B049", "#2AAC3F", "#20A836", "#16A32D", "#0C9F24", "#029B1B"];
+var colors = ["#C6D7C7", "#C8D0C0", "#CBCAB9", "#CEC3B2", "#D0BDAB", "#D3B6A4", "#D6B09D", "#D9AA96", "#DBA38F", "#DE9D88", "#E19681", "#E3907A", "#E68973", "#E9836C", "#EC7D65", "#EE765E", "#F17057", "#F46950", "#F66349", "#F95C42", "#FC563B", "#FF5035"];
+var faceColors = [];
+var backgroundColors = [];
+var fontSideColors = [];
+var axis;
+
+var textMesh1;
+var text = "2017",
+	fontHeight = 20,
+	fontSize = 60,
+	hover = 30,
+	curveSegments = 4,
+	bevelThickness = 2,
+	bevelSize = 1.5,
+	bevelSegments = 3,
+	bevelEnabled = true,
+	font = undefined,
+	fontName = "helvetiker", 
+	fontWeight = "regular"; // normal bold
+
+		
+init();
+animate();
+
+////////////////
+// FUNCTIONS // 	
+//////////////	
+function init() {
+	// SCENE
+	scene = new THREE.Scene();
+	scene.background = new THREE.Color( colors[0] );
+	scene.fog = new THREE.Fog( colors[0], 0.0020 );
+	//scene.fog = new THREE.FogExp2( colors[0], 0.0020 );
+	
+	
+	// CAMERA
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(-100,25,150);
+	camera.lookAt(scene.position);	
+	
+	// RENDERER
+	if ( Detector.webgl ) 
+		renderer = new THREE.WebGLRenderer({antialias:true});
+	else
+		renderer = new THREE.CanvasRenderer(); 
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	container = document.getElementById( 'ThreeJS' );
+	container.appendChild( renderer.domElement );
+
+
+	// CONTROLS
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	// STATS
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	
+	// LIGHT
+	var lights = [];
+	lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+	lights[ 0 ].position.set( 0, 200, 0 );
+	lights[ 1 ].position.set( 100, 200, 100 );
+	lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+	scene.add( lights[ 0 ] );
+	scene.add( lights[ 1 ] );
+	scene.add( lights[ 2 ] );
+
+	
+	///////////////
+	// Draw XYZ //
+	/////////////
+	drawAxis();
+	
+
+	/////////////////////
+	// Plane Geometry //
+	///////////////////
+	var img = new Image();
+	//img.src = "textures/large-type-02.png";
+	
+	img.src = "textures/type-play-03.png";
+	
+	img.onload = function () {
+		//createBackground(img.width,img.height, 4);
+		//createShape(img);	 // Remember startAni
+	};	
+	
+	
+	
+	/////////////////////
+	// From Font //
+	///////////////////
+	
+	// Get text from hash
+	material = new THREE.MultiMaterial([
+		//new THREE.MeshPhongMaterial( { color: 0xff0000, shading: THREE.FlatShading } ), // front
+		new THREE.MeshBasicMaterial({ color: 0xff0000 }),
+		new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors} )
+	//	new THREE.MeshBasicMaterial({ color: colors[4]}) // side
+		
+	]);
+	
+	/*
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		geometry.vertices[i].z = Math.random() * 6;
+		//geometry.vertices[i].z = 0
+		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
+	}
+	for (var i = 0, l = geometry.faces.length; i < l; i++) {
+		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
+		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
+		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
+	}
+	*/
+
+	group = new THREE.Group();
+	group.position.y = 0 - fontHeight*2;
+
+	scene.add( group );
+
+	loadFont();			
+	//
+	
+	
+	//////////////////////
+	// Event Listeners //
+	////////////////////
+	window.addEventListener( 'resize', onWindowResize, false );
+	var tog = false;
+	document.body.addEventListener('keypress', function(e) {
+		//console.log('keypress:' + e.keyCode);
+		if(e.keyCode == 32) {
+			if(!tog) {
+				axis.visible = false;
+				tog = true;
+			} else {
+				axis.visible = true;
+				tog = false;
+			}
+		}
+		
+	});
+}
+
+
+function drawAxis() {
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(100, 0, 0) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0xFF0000 } );
+	axis = new THREE.Line( lineGeometry, lineMaterial );
+	scene.add(axis);
+	
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 100, 0) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0x00FF00 } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+	
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 100) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000FF } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(100, 100, 100) );	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineDashedMaterial( { color: 0x00FFFF, dashSize: 4, gapSize: 2 } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+}
+
+function createShape(img) {
+	w = img.width -1;
+	h = img.height -1;
+	var multiplier = 4;
+	
+    var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
+	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
+	
+	// Random Texture
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		geometry.vertices[i].z = Math.random() * 6;
+		//geometry.vertices[i].z = 0
+		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
+	}
+
+	for (var i = 0, l = geometry.faces.length; i < l; i++) {
+		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
+		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
+		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
+	}
+	
+
+	baseGeo = geometry.clone();
+
+	var data = getTypeData(img);
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		if(data[i] > 0) {
+			//geometry.vertices[i].z = data[i] ;
+			
+			geometry.vertices[i].z = data[i] ;
+		}
+		
+		faceColors[i] = colors[Math.floor(geometry.vertices[i].z)];
+		//faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
+	}
+
+	for (var i = 0, l = geometry.faces.length; i < l; i++) { 
+		var crap1 = new THREE.Color(faceColors[geometry.faces[i].a]);
+		geometry.faces[i].vertexColors[0].copy(crap1); 
+	
+		var crap2 = new THREE.Color(faceColors[geometry.faces[i].b]);
+		geometry.faces[i].vertexColors[1].copy(crap2); 
+	
+		var crap3 = new THREE.Color(faceColors[geometry.faces[i].c]);
+		geometry.faces[i].vertexColors[2].copy(crap3); 
+	}
+	
+	savedGeo = geometry.clone();
+	
+	//var material = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
+	var material =  new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors} );
+	mesh = new THREE.Mesh( geometry, material);
+	
+	scene.add(mesh);
+	startAni = true;
+}
+	
+function createBackground(w,h, multiplier) {
+	
+    var backgroundGeo = new THREE.PlaneGeometry( w*multiplier*6 , h*multiplier*6, w*6, h*6);
+	backgroundGeo.faces.push( new THREE.Face3( 0, 1, 2 ) );
+	
+	for (var i = 0, l = backgroundGeo.vertices.length; i < l; i++) {
+		backgroundGeo.vertices[i].z = Math.random() * 8;
+		var colorIndex = Math.floor(backgroundGeo.vertices[i].z);
+		backgroundColors.push(colors[colorIndex]);	
+	}
+	
+	for (var i = 0, l = backgroundGeo.faces.length; i < l; i++) {
+		backgroundGeo.faces[i].vertexColors[0] = new THREE.Color(backgroundColors[backgroundGeo.faces[i].a]);
+		backgroundGeo.faces[i].vertexColors[1] = new THREE.Color(backgroundColors[backgroundGeo.faces[i].b]);
+		backgroundGeo.faces[i].vertexColors[2] = new THREE.Color(backgroundColors[backgroundGeo.faces[i].c]);
+	}
+	
+	//var backMaterial = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
+	//backgroundMesh = new THREE.Mesh( backgroundGeo, backMaterial);
+
+	backgroundMesh = new THREE.Mesh( backgroundGeo, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
+	
+	scene.add(backgroundMesh);
+	
+}
+
+function getTypeData(img) {
+    var canvas = document.createElement( 'canvas' );
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var context = canvas.getContext( '2d' );
+    var size = canvas.width * canvas.height, data = new Float32Array( size );
+	
+    context.drawImage(img,0,0);
+
+    for ( var i = 0; i < size; i ++ ) {
+        data[i] = 0
+    }
+
+    var imgd = context.getImageData(0, 0, canvas.width , canvas.height);
+    var pix = imgd.data;
+	
+	var j=0;
+	for ( var y = 0; y < canvas.height; y ++ ) { 
+    	for ( var x = 0; x < canvas.width; x ++ ) {
+			var pixel = context.getImageData(x, y, 1, 1);
+			if(pixel.data[0] > 0) {
+				data[j] = 20; 
+			}
+			j++;
+		}
+    }
+    return data;
+}
+
+
+//////////////////////
+//////////////////////
+function loadFont() {
+	var loader = new THREE.FontLoader();
+	loader.load( 'fonts/' + fontName + '_' + fontWeight + '.typeface.json', function ( response ) {
+		font = response;
+		refreshText();
+	} );
+}
+
+function createText() {
+	textGeo = new THREE.TextGeometry( text, {
+		font: font,
+		size: fontSize,
+		height: fontHeight,
+		curveSegments: curveSegments,
+		material: 0,
+		extrudeMaterial: 0
+	});
+
+	textGeo.computeBoundingBox();
+	textGeo.computeVertexNormals();
+	
+
+
+	var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+	
+
+	for (var i = 0, l = textGeo.vertices.length; i < l; i++) {
+		fontSideColors[i] = colors[Math.floor(textGeo.vertices[i].z)];
+	}
+	
+	for (var i = 0, l = textGeo.faces.length; i < l; i++) { 
+		var crap1 = new THREE.Color(fontSideColors[textGeo.faces[i].a]);
+		textGeo.faces[i].vertexColors[0] = crap1; 
+	
+		var crap2 = new THREE.Color(fontSideColors[textGeo.faces[i].b]);
+		textGeo.faces[i].vertexColors[1] = crap2 ; 
+	
+		var crap3 = new THREE.Color(fontSideColors[textGeo.faces[i].c]);
+		textGeo.faces[i].vertexColors[2] = crap3 ; 
+	}
+
+	textMesh1 = new THREE.Mesh( textGeo, material );
+	textMesh1.position.x = centerOffset;
+	textMesh1.position.y = hover;
+	textMesh1.position.z = 0;
+
+	textMesh1.rotation.x = 0;
+	textMesh1.rotation.y = Math.PI * 2;		
+	group.add( textMesh1 );
+
+
+
+}
+
+function refreshText() {
+	group.remove( textMesh1 );
+	if ( !text ) return;
+	createText();
+}
+//////////////////////
+//////////////////////
+
+function animate() {
+    requestAnimationFrame( animate );
+	render();	
+	//if(startAni) {	
+		update();
+	//}
+}
+
+var doOnce = true;
+function update() {
+	var t = clock.getElapsedTime();
+	//mesh.rotation.x += 0.005;
+	//mesh.rotation.y += 0.005;
+	//mesh.rotation.z += 0.005;
+	/*	
+	
+	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
+		var movement = 20 * Math.sin(t*2) ;
+		mesh.geometry.vertices[i].z = movement; 
+				
+		if (movement >= savedGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 					
+		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;			
+		}
+		
+		faceColors[i] = colors[Math.floor(mesh.geometry.vertices[i].z)];
+	}
+	
+
+	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
+		var newColorA = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
+			mesh.geometry.faces[i].vertexColors[0].copy(newColorA); 
+		
+		var newColorB = new THREE.Color(faceColors[mesh.geometry.faces[i].b]);
+			mesh.geometry.faces[i].vertexColors[1].copy(newColorB); 
+
+		var newColorC = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);
+			mesh.geometry.faces[i].vertexColors[2].copy(newColorC); 
+	}	
+	*/
+	if(doOnce) {
+		doOnce = false;
+	}
+	
+	var fontMovement = 2 * Math.sin(t*2) + 2;
+	textMesh1.scale.z = fontMovement; 	
+	textMesh1.geometry.verticesNeedUpdate = true;
+    textMesh1.geometry.dynamic = true;
+
+	var fontColor = Math.floor(fontMovement*5);
+	//textMesh1.material.materials[0].color.setStyle(colors[fontColor]);
+	textMesh1.material.materials[0].color.setStyle("#FF5035");
+
+	
+	// fontSideColors[i] = colors[Math.floor(mesh.geometry.vertices[i].z)];
+	
+	//console.log(textMesh1.geometry.vertices);
+	/*
+	mesh.geometry.colorsNeedUpdate = true;
+	mesh.geometry.verticesNeedUpdate = true;
+    mesh.geometry.dynamic = true;
+	*/
+	
+	controls.update();
+	stats.update();
+}
+
+function render() {				
+	renderer.render( scene, camera );
+}
+
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+</script>
+
+</body>
+</html>
