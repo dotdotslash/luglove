@@ -2,7 +2,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Text 03</title>
+	<title>Poly Line 10</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -30,25 +30,10 @@ var startAni = false;
 
 // Terrain colors
 //var colors = ["#A3E0AF", "#A3E0AF", "#A3E0AF", "#A3E0AF", "#A3E0AF", "#99DCA5", "#8FD79C", "#85D393", "#7BCF8A", "#71CA80", "#67C677", "#5CC26E", "#52BD65", "#48B95B", "#3EB552", "#34B049", "#2AAC3F", "#20A836", "#16A32D", "#0C9F24", "#029B1B"];
-var colors = ["#C6D7C7", "#C8D0C0", "#CBCAB9", "#CEC3B2", "#D0BDAB", "#D3B6A4", "#D6B09D", "#D9AA96", "#DBA38F", "#DE9D88", "#E19681", "#E3907A", "#E68973", "#E9836C", "#EC7D65", "#EE765E", "#F17057", "#F46950", "#F66349", "#F95C42", "#FC563B", "#FF5035"];
-var faceColors = [];
+//var colors = ["#2a085e", "#C8D0C0", "#CBCAB9", "#CEC3B2", "#D0BDAB", "#D3B6A4", "#D6B09D", "#D9AA96", "#DBA38F", "#DE9D88", "#E19681", "#E3907A", "#E68973", "#E9836C", "#EC7D65", "#EE765E", "#F17057", "#F46950", "#F66349", "#F95C42", "#FC563B", "#FF5035"];
+var colors = ["#2A085E", "#32095D", "#3A0B5D", "#430D5D", "#4B0F5C", "#54115C", "#5C135C", "#65155C", "#6D175B", "#76195B", "#7E1B5B", "#871C5A", "#8F1E5A", "#98205A", "#A0225A", "#A92459", "#B12659", "#BA2859", "#C22A58", "#CB2C58", "#D32E58", "#DC3058"];
 var backgroundColors = [];
-var fontSideColors = [];
 var axis;
-
-var textMesh1;
-var text = "2017",
-	fontHeight = 20,
-	fontSize = 60,
-	hover = 30,
-	curveSegments = 4,
-	bevelThickness = 2,
-	bevelSize = 1.5,
-	bevelSegments = 3,
-	bevelEnabled = true,
-	font = undefined,
-	fontName = "helvetiker", 
-	fontWeight = "regular"; // normal bold
 
 		
 init();
@@ -114,30 +99,18 @@ function init() {
 	drawAxis();
 	
 
-	
-	
 	/////////////////////
-	// From Font //
+	// Plane Geometry //
 	///////////////////
+	var img = new Image();
+	//img.src = "textures/large-type-02.png";
 	
-	// Get text from hash
-	material = new THREE.MultiMaterial([
-		//new THREE.MeshPhongMaterial( { color: 0xff0000, shading: THREE.FlatShading } ), // front
-		new THREE.MeshBasicMaterial({ color: 0xff0000 }),
-		new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors} )
-	//	new THREE.MeshBasicMaterial({ color: colors[4]}) // side
-	]);
+	img.src = "textures/type-play-03.png";
 	
-	material.materials[0].color.setStyle(colors[1]);
-	
-	group = new THREE.Group();
-	group.position.y = 0 - fontHeight*2;
-
-	scene.add( group );
-
-	loadFont();			
-	//
-	
+	img.onload = function () {
+		//createBackground(img.width,img.height, 4);
+		createShape(img);	
+	};	
 	
 	//////////////////////
 	// Event Listeners //
@@ -193,6 +166,66 @@ function drawAxis() {
 	axis.add(line);
 }
 
+function createShape(img) {
+	w = img.width -1;
+	h = img.height -1;
+	var multiplier = 4;
+	
+    var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
+	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
+	
+	// Random Texture
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		geometry.vertices[i].z = Math.random() * 6;
+		//geometry.vertices[i].z = 0
+	}
+
+
+	baseGeo = geometry.clone();
+
+	var data = getTypeData(img);
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		if(data[i] > 0) {
+			//geometry.vertices[i].z = data[i] ;
+			
+			geometry.vertices[i].z = data[i] ;
+		}
+	}
+
+
+	savedGeo = geometry.clone();
+//MeshPhongMaterial
+	//var material =  new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors} );
+	//MeshPhongMaterial
+	var material = new THREE.MeshBasicMaterial( { wireframe: true, color: 0xFF5035, shading: THREE.FlatShading } );
+	mesh = new THREE.Mesh( geometry, material);
+	
+	scene.add(mesh);
+	startAni = true;
+}
+	
+function createBackground(w,h, multiplier) {
+	
+    var backgroundGeo = new THREE.PlaneGeometry( w*multiplier*2 , h*multiplier*2, w*2, h*2);
+	backgroundGeo.faces.push( new THREE.Face3( 0, 1, 2 ) );
+	
+	for (var i = 0, l = backgroundGeo.vertices.length; i < l; i++) {
+		backgroundGeo.vertices[i].z = Math.random() * 8;
+	}
+	
+	
+	
+	//var backMaterial = new THREE.MeshPhongMaterial( { wireframe: false, color: 0x156289, emissive: 0x072534,side: THREE.DoubleSide,shading: THREE.FlatShading } );
+	//backgroundMesh = new THREE.Mesh( backgroundGeo, backMaterial);
+	//var material =  new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } 
+		//MeshPhongMaterial
+	var material = new THREE.MeshBasicMaterial( { wireframe: true, color: 0xFF5035, shading: THREE.FlatShading } );
+
+	backgroundMesh = new THREE.Mesh( backgroundGeo, material);
+	
+	scene.add(backgroundMesh);
+	
+}
 
 
 function getTypeData(img) {
@@ -225,140 +258,42 @@ function getTypeData(img) {
 }
 
 
-//////////////////////
-//////////////////////
-function loadFont() {
-	var loader = new THREE.FontLoader();
-	loader.load( 'fonts/' + fontName + '_' + fontWeight + '.typeface.json', function ( response ) {
-		font = response;
-		refreshText();
-	} );
-}
-
-function createText() {
-	textGeo = new THREE.TextGeometry( text, {
-		font: font,
-		size: fontSize,
-		height: fontHeight,
-		curveSegments: curveSegments,
-		material: 0,
-		extrudeMaterial: 0
-	});
-
-	textGeo.computeBoundingBox();
-	textGeo.computeVertexNormals();
-	
-
-
-	var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
-	
-
-	for (var i = 0, l = textGeo.vertices.length; i < l; i++) {
-		fontSideColors[i] = colors[Math.floor(textGeo.vertices[i].z)];
-	}
-	
-	for (var i = 0, l = textGeo.faces.length; i < l; i++) { 
-		//var crap1 = new THREE.Color(fontSideColors[textGeo.faces[i].a]);
-		var crap1 = new THREE.Color(0xFF00FF);
-		textGeo.faces[i].vertexColors[0] = crap1; 
-	
-		//var crap2 = new THREE.Color(fontSideColors[textGeo.faces[i].b]);
-		var crap2 = new THREE.Color(0x00FFFF);
-		textGeo.faces[i].vertexColors[1] = crap2 ; 
-	
-	//var crap3 = new THREE.Color(fontSideColors[textGeo.faces[i].c]);
-		var crap3 = new THREE.Color(0xFFFF00);
-		textGeo.faces[i].vertexColors[2] = crap3 ; 
-	}
-
-	textMesh1 = new THREE.Mesh( textGeo, material );
-	textMesh1.position.x = centerOffset;
-	textMesh1.position.y = hover;
-	textMesh1.position.z = 0;
-	
-	console.log(textMesh1);
-
-	textMesh1.rotation.x = 0;
-	textMesh1.rotation.y = Math.PI * 2;		
-	group.add( textMesh1 );
-
-
-
-}
-
-function refreshText() {
-	group.remove( textMesh1 );
-	if ( !text ) return;
-	createText();
-}
-//////////////////////
-//////////////////////
 
 function animate() {
     requestAnimationFrame( animate );
 	render();	
-	//if(startAni) {	
+	if(startAni) {	
 		update();
-	//}
+	}
 }
 
 var doOnce = true;
 function update() {
+	//mesh.rotation.x += 0.005;
+	//mesh.rotation.y += 0.005;
+	//mesh.rotation.z += 0.005;
+		
 	var t = clock.getElapsedTime();
-
+	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
+		var movement = 20 * Math.sin(t*2);
+		mesh.geometry.vertices[i].z = movement; 
+				
+		if (movement >= savedGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z; 					
+		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
+			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;			
+		}
+		
+	}
+	
 	if(doOnce) {
-		console.log('once');
 		doOnce = false;
 	}
 	
-	var fontMovement = 2 * Math.sin(t*2) + 2;
-	//textMesh1.scale.z = fontMovement; 	
-	
-
-	var fontColor = Math.floor(fontMovement*5);
-	textMesh1.material.materials[0].color.setStyle(colors[fontColor]);
-	//textMesh1.material.materials[0].color.setStyle("#FF5035");
-	
-	
-	//fontSideColors[i] = colors[Math.floor(textMesh1.geometry.vertices[i].z)];
-	 //console.log(textMesh1);
-	 
-	//fontSideColors[i] = colors[Math.floor(textGeo.vertices[i].z)];
-	// fontSideColors[i] = colors[Math.floor(mesh.geometry.vertices[i].z)];
-	
-	for (var i = 0, l = textMesh1.geometry.vertices.length; i < l; i++) {
-		//console.log(i);
-		fontSideColors[i] = colors[Math.floor(textMesh1.geometry.vertices[i].z)];
-		//fontSideColors[i] = colors[Math.floor(textGeo.vertices[i].z)];
-	}
-	
-	for (var i = 0, l = textMesh1.geometry.faces.length; i < l; i++) { 
-		//console.log(fontSideColors[textGeo.faces[i].a]);
-		//var crap1 = new THREE.Color(fontSideColors[textGeo.faces[i].a]);
-		var crap1 = new THREE.Color(0xFF0000);
-		textMesh1.geometry.faces[i].vertexColors[0].copy(crap1); 
-	
-		//var crap2 = new THREE.Color(fontSideColors[textGeo.faces[i].b]);
-		var crap2 = new THREE.Color(0x00FF00);
-		textMesh1.geometry.faces[i].vertexColors[1].copy(crap2);
-	
-		//var crap3 = new THREE.Color(fontSideColors[textGeo.faces[i].c]);
-		var crap3 = new THREE.Color(0x0000FF);
-		textMesh1.geometry.faces[i].vertexColors[2].copy(crap3); 
-		//console.log(crap3);
-	}
-	
-	//console.log(textMesh1.geometry.vertices[300]);
-
-	textMesh1.geometry.colorsNeedUpdate = true;
-	textMesh1.geometry.verticesNeedUpdate = true;
-    textMesh1.geometry.dynamic = true;
-
-	/*
-	mesh.geometry.colorsNeedUpdate = true;
+	//
+	mesh.geometry.colorsNeedUpdate = false;
 	mesh.geometry.verticesNeedUpdate = true;
     mesh.geometry.dynamic = true;
-	*/
 	
 	controls.update();
 	stats.update();
