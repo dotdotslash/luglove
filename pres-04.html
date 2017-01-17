@@ -173,20 +173,23 @@ function createShape(img) {
 	h = img.height -1;
 	var multiplier = 4;
 	
+	// Create Geometry
     var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
 	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
 	
-	// Random Texture
+	// Randomize Mesh Vert
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		geometry.vertices[i].z = Math.random() * 4;
 		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 	}
 
-
+	// Save copy of Base Geometry
 	baseGeo = geometry.clone();
 	
-	
+	// Get Typeface Geometry
 	var data = getTypeData(img);
+	
+	// Get Update Geometry based on Typeface Data
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		if(data[i] > 0) {
 			geometry.vertices[i].z = 20 ;
@@ -194,23 +197,29 @@ function createShape(img) {
 		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
 	}
 	
+	// Assign Vertex colors based on Z index
 	for (var i = 0, l = geometry.faces.length; i < l; i++) {
 		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
 		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
 		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
 	}
 
-
+	// Geometry needs updating
 	geometry.computeFaceNormals();
 	geometry.colorsNeedUpdate = true;
 	geometry.verticesNeedUpdate = true;
     geometry.dynamic = true;
-
+	
+	// Copy New changes of Geometry
 	savedGeo = geometry.clone();
 	
+	// Produce mesh
 	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
-		
+	
+	// Add to scene
 	scene.add(mesh);
+	
+	// Okay to animate
 	startAni = true;
 }
 
