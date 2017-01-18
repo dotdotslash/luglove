@@ -1,17 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Poly Line 10</title>
+	<title>Extrude 1</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <body>
 
-<script src="js/three.js"></script>
-<script src="js/Detector.js"></script>
-<script src="js/stats.min.js"></script>
-<script src="js/ImprovedNoise.js"></script>
-<script src="js/controls/OrbitControls.js"></script>
+<script src="../js/three.js"></script>
+<script src="../js/Detector.js"></script>
+<script src="../js/stats.min.js"></script>
+<script src="../js/ImprovedNoise.js"></script>
+<script src="../js/controls/OrbitControls.js"></script>
 
 <div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
 <script>
@@ -130,14 +130,8 @@ function init() {
 	///////////////////
 	
 	var img = new Image();
-	//img.src = "textures/long-type-02.png";
-	//img.src = "textures/phone.png";
-	//img.src = "textures/dji.png";
-	img.src = "textures/type-play-04.png";
-	
+	img.src = "../textures/type-play-04.png";
 	img.onload = function () {
-		//console.log(img.width);
-		//console.log(img.height);
 		createShape(img.width,img.height);	
 	};	
 	
