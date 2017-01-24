@@ -1,0 +1,419 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Eh 4</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<style>
+body, html {
+			height: 100%;
+		}
+	body {
+
+	
+		background: -webkit-linear-gradient(90deg, #2A085E, #DC3058);
+		
+		background: -moz-linear-gradient(90deg, #2A085E, #DC3058);
+		
+		background: -o-linear-gradient(90deg, #2A085E, #DC3058);
+		
+		background: -ms-linear-gradient(90deg, #2A085E, #DC3058);
+		
+		background: linear-gradient(90deg, #2A085E, #DC3058);
+		
+	}
+</style>
+
+</head>
+<body>
+
+<script src="../js/three.js"></script>
+<script src="../js/Detector.js"></script>
+<script src="../js/stats.min.js"></script>
+<script src="../js/ImprovedNoise.js"></script>
+<script src="../js/controls/OrbitControls.js"></script>
+
+
+
+<div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+<script>
+
+// standard global variables
+var container, scene, camera, renderer, controls, stats;
+var clock = new THREE.Clock();
+
+
+var maxEl = 400;
+
+// custom global variables
+var cube;
+var mesh = null;
+var textGeo;
+var baseGeo = null;
+var savedGeo = null;
+var startAni = false;
+
+// Terrain colors
+var colors = ["#2A085E", "#32095D", "#3A0B5D", "#430D5D", "#4B0F5C", "#54115C", "#5C135C", "#65155C", "#6D175B", "#76195B", "#7E1B5B", "#871C5A", "#8F1E5A", "#98205A", "#A0225A", "#A92459", "#B12659", "#BA2859", "#C22A58", "#CB2C58", "#D32E58", "#DC3058"];
+var faceColors = [];
+var backgroundColors = [];
+var fontSideColors = [];
+var frontVerts = [];
+var axis;
+
+var textMesh1;
+var text = "Breakthrough",
+	fontHeight = 20,
+	fontSize = 60,
+	hover = 30,
+	curveSegments = 4,
+	bevelThickness = 2,
+	bevelSize = 1.5,
+	bevelSegments = 3,
+	bevelEnabled = true,
+	font = undefined,
+	fontName = "helvetiker", 
+	fontWeight = "regular"; // normal bold
+
+		
+init();
+animate();
+
+////////////////
+// FUNCTIONS // 	
+//////////////	
+function init() {
+	// SCENE
+	scene = new THREE.Scene();
+	scene.background = new THREE.Color( colors[0] );
+	//scene.fog = new THREE.Fog( colors[0], 1 );
+	//scene.fog = new THREE.FogExp2( colors[0], 0.0020 );
+	
+	
+	// CAMERA
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(-100,25,150);
+	camera.lookAt(scene.position);	
+	
+	// RENDERER
+	if ( Detector.webgl ) 
+		renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
+	else
+		renderer = new THREE.CanvasRenderer(); 
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	container = document.getElementById( 'ThreeJS' );
+	container.appendChild( renderer.domElement );
+	
+	renderer.setClearColor( 0x000000, 0 ); // the default
+
+
+	// CONTROLS
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	// STATS
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	
+	// LIGHT
+	var lights = [];
+	lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+	lights[ 0 ].position.set( 0, 200, 0 );
+	lights[ 1 ].position.set( 100, 200, 100 );
+	lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+	scene.add( lights[ 0 ] );
+	scene.add( lights[ 1 ] );
+	scene.add( lights[ 2 ] );
+
+	
+	///////////////
+	// Draw XYZ //
+	/////////////
+	drawAxis();
+	
+
+
+	
+	
+	
+	/////////////////////
+	// From Font //
+	///////////////////
+	
+	// Get text from hash
+	material = new THREE.MultiMaterial([
+		//new THREE.MeshPhongMaterial( { color: 0x0000ff, shading: THREE.FlatShading } ), // front
+		new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors}),
+		new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors})
+	]);
+	
+	/*
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		geometry.vertices[i].z = Math.random() * 6;
+		//geometry.vertices[i].z = 0
+		faceColors.push(colors[Math.floor(geometry.vertices[i].z)]);	
+	}
+	for (var i = 0, l = geometry.faces.length; i < l; i++) {
+		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
+		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
+		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
+	}
+	*/
+	
+
+
+
+	group = new THREE.Group();
+	group.position.y = 0 - fontHeight*2;
+	
+	
+	scene.add( group );
+	
+
+	loadFont();			
+	//
+		
+	//////////////////////
+	// Event Listeners //
+	////////////////////
+	window.addEventListener( 'resize', onWindowResize, false );
+	var tog = false;
+	document.body.addEventListener('keypress', function(e) {
+		//console.log('keypress:' + e.keyCode);
+		if(e.keyCode == 32) {
+			if(!tog) {
+				axis.visible = false;
+				tog = true;
+			} else {
+				axis.visible = true;
+				tog = false;
+			}
+		}
+		
+	});
+}
+
+
+function drawAxis() {
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(100, 0, 0) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0xFF0000 } );
+	axis = new THREE.Line( lineGeometry, lineMaterial );
+	scene.add(axis);
+	
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 100, 0) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0x00FF00 } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+	
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 100) );
+	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000FF } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+
+	var lineGeometry = new THREE.Geometry();
+	var vertArray = lineGeometry.vertices;
+	vertArray.push( new THREE.Vector3(0, 0, 0), new THREE.Vector3(100, 100, 100) );	lineGeometry.computeLineDistances();
+	var lineMaterial = new THREE.LineDashedMaterial( { color: 0x00FFFF, dashSize: 4, gapSize: 2 } );
+	var line = new THREE.Line( lineGeometry, lineMaterial );
+	axis.add(line);
+}
+
+
+
+//////////////////////
+//////////////////////
+function loadFont() {
+	var loader = new THREE.FontLoader();
+	loader.load( '../fonts/' + fontName + '_' + fontWeight + '.typeface.json', function ( response ) {
+		font = response;
+		refreshText();
+	} );
+}
+
+function createText() {
+	textGeo = new THREE.TextGeometry( text, {
+		font: font,
+		size: fontSize,
+		height: fontHeight,
+		curveSegments: curveSegments,
+		material: 0,
+		extrudeMaterial: 0
+	});
+
+	textGeo.computeBoundingBox();
+	textGeo.computeVertexNormals();
+	textGeo.colorsNeedUpdate = true;
+	textGeo.verticesNeedUpdate = true;
+    textGeo.dynamic = true;
+	
+	var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+	
+	for (var i = 0, l = textGeo.vertices.length; i < l; i++) {
+		fontSideColors[i] = colors[Math.floor(textGeo.vertices[i].z)];		
+		if(textGeo.vertices[i].z > 0) {
+			frontVerts.push(1);
+		} else {
+			frontVerts.push(0);
+		}
+		//faceColors.push(colors[Math.floor(textGeo.vertices[i].z)]);	
+		faceColors[i] = colors[Math.floor(textGeo.vertices[i].z)];
+	}
+	
+	console.log(faceColors);
+	
+	for (var i = 0, l = textGeo.faces.length; i < l; i++) { 
+		/*
+		textGeo.faces[i].vertexColors[0] = new THREE.Color(0xFF0000);
+		textGeo.faces[i].vertexColors[1] = new THREE.Color(0x00FF00);
+		textGeo.faces[i].vertexColors[2] = new THREE.Color(0x0000FF);
+		*/
+/*
+		textGeo.faces[i].vertexColors[0] = new THREE.Color(faceColors[textGeo.faces[i].a]);
+		textGeo.faces[i].vertexColors[1] = new THREE.Color(faceColors[textGeo.faces[i].b]);
+		textGeo.faces[i].vertexColors[2] = new THREE.Color(faceColors[textGeo.faces[i].c]);
+		*/
+		var crap1 = new THREE.Color(faceColors[textGeo.faces[i].a]);
+		textGeo.faces[i].vertexColors[0] = crap1; 
+
+		var crap2 = new THREE.Color(faceColors[textGeo.faces[i].b]);
+		textGeo.faces[i].vertexColors[1] = crap2 ; 
+
+		var crap3 = new THREE.Color(faceColors[textGeo.faces[i].c]);
+		textGeo.faces[i].vertexColors[2] = crap3 ; 
+	}
+	
+	
+
+	textMesh1 = new THREE.Mesh( textGeo, material );
+	textMesh1.position.x = centerOffset;
+	textMesh1.position.y = hover;
+	textMesh1.position.z = 0;
+
+
+
+	textMesh1.rotation.x = 0;
+	textMesh1.rotation.y = Math.PI * 2;		
+	group.add( textMesh1 );
+
+}
+
+function refreshText() {
+	group.remove( textMesh1 );
+	if ( !text ) return;
+	createText();
+}
+//////////////////////
+//////////////////////
+
+function animate() {
+    requestAnimationFrame( animate );
+	render();	
+	//if(startAni) {	
+		update();
+	//}
+}
+
+var doOnce = true;
+function update() {
+	var t = clock.getElapsedTime();
+	//mesh.rotation.x += 0.005;
+	//mesh.rotation.y += 0.005;
+	//mesh.rotation.z += 0.005;
+
+	if(doOnce) {
+		doOnce = false;
+	}
+	
+	var movement = (maxEl) * Math.sin(t*2);
+	movement = Math.floor(movement);
+		
+	for (var i = 0, l = frontVerts.length; i < l; i++) {
+		
+		if(movement > 0) {
+			if(frontVerts[i] > 0) {
+				//textMesh1.geometry.vertices[i].z += 0.05; 
+				textMesh1.geometry.vertices[i].z = movement; 				
+			}
+		} else {
+				textMesh1.geometry.vertices[i].z = 0; 
+		}
+		//faceColors[i] = colors[Math.floor(textMesh1.geometry.vertices[i].z)];
+		
+		//faceColors[i] = colors[10];
+		
+	}	
+	
+	
+	
+	
+	if(textMesh1) {	
+		/*
+		console.log(textMesh1.geometry.faces[10].vertexColors[0]);
+		
+		var newColorA = new THREE.Color(0x0000FF);
+			textMesh1.geometry.faces[10].vertexColors[0].copy(newColorA); 
+			
+		console.log(textMesh1.geometry.faces[10].vertexColors[0]);
+		*/
+		for (var i = 0, l = textMesh1.geometry.vertices.length; i < l; i++) {
+			faceColors[i] = colors[Math.floor(textMesh1.geometry.vertices[i].z)];
+		}
+			
+			
+		for (var i = 0, l = textMesh1.geometry.faces.length; i < l; i++) { 
+			var crap1 = new THREE.Color(faceColors[textMesh1.geometry.faces[i].a]);
+			textMesh1.geometry.faces[i].vertexColors[0] = crap1; 
+	
+			var crap2 = new THREE.Color(faceColors[textMesh1.geometry.faces[i].b]);
+			textMesh1.geometry.faces[i].vertexColors[1] = crap2 ; 
+	
+			var crap3 = new THREE.Color(faceColors[textMesh1.geometry.faces[i].c]);
+			textMesh1.geometry.faces[i].vertexColors[2] = crap3 ; 
+		}
+		
+
+	
+		textMesh1.geometry.colorsNeedUpdate = true;
+		textMesh1.geometry.verticesNeedUpdate = true;
+	    textMesh1.geometry.dynamic = true;
+	}
+	
+	
+	controls.update();
+	stats.update();
+}
+
+function render() {				
+	renderer.render( scene, camera );
+}
+
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+</script>
+
+</body>
+</html>

@@ -1,9 +1,32 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Extrude 2</title>
-	<meta charset="utf-8">
+	<title>Extrude 11</title>
+	<meta charset="utf-11">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+<style>
+/*
+	body, html {
+		height: 100%;
+	}
+	body {
+
+	
+		background: -webkit-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -moz-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -o-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -ms-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: linear-gradient(90deg, #0003AD, #FC00F5);
+		
+	}
+*/
+</style>
+
 </head>
 <body>
 
@@ -12,7 +35,6 @@
 <script src="../js/stats.min.js"></script>
 <script src="../js/ImprovedNoise.js"></script>
 <script src="../js/controls/OrbitControls.js"></script>
-
 <script src="../js-helpers/jsGradient.js"></script>
 
 <div id="ThreeJS" style="position: fixed; left:0px; top:0px"></div>
@@ -21,14 +43,29 @@
 /////////////////////
 // Geometry Variables // 	
 ///////////////////	
-var maxEl = 80;
-var randEl = 10;
-var imageSource = "../textures/type-t-01.png";
+var maxEl = 250;
+var randEl = 50;
+var imageSource = "../textures/type-t-08.png";
+var img = new Image();	
+
 
 /////////////////////
 // Terrain colors // 	
 ///////////////////	
-var gradient = jsgradient.generateGradient('#2A085E', '#DC3058', maxEl+1);
+
+
+
+/*
+var firstGradient = jsgradient.generateGradient('#000000', '#0000FF', (maxEl/2));
+var secondGradient = jsgradient.generateGradient('#FF0000', '#00FF00', (maxEl/2)+1);
+var thirdGradient = jsgradient.generateGradient('#00FF00', '#0000FF', 50);
+var lol = firstGradient.concat(secondGradient);
+ var gradient = lol.concat(thirdGradient);
+ */
+ var gradient = jsgradient.generateGradient('#000000', '#FFFFFF', (maxEl/2));
+ 
+
+//console.log(gradient);
 
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
@@ -42,6 +79,7 @@ var savedGeo = null;
 var startAni = false;
 var faceColors = [];
 var axis;
+var pause;
 		
 init();
 animate();
@@ -52,8 +90,8 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( gradient[0] );
-	scene.fog = new THREE.Fog( gradient[0], 0.0020 );
+	//scene.background = new THREE.Color( gradient[0] );
+	//scene.fog = new THREE.Fog( gradient[0], 0.0020 );
 	//scene.fog = new THREE.FogExp2( colors[0], 0.0020 );
 	
 	
@@ -66,13 +104,19 @@ function init() {
 	camera.lookAt(scene.position);	
 	
 	// RENDERER
-	if ( Detector.webgl ) 
+	if ( Detector.webgl ) {
+		//renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
 		renderer = new THREE.WebGLRenderer({antialias:true});
-	else
+		
+	}
+	else {
 		renderer = new THREE.CanvasRenderer(); 
+		
+	}
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	container = document.getElementById( 'ThreeJS' );
 	container.appendChild( renderer.domElement );
+	//renderer.setClearColor( 0x000000, 0 ); // the default
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -108,7 +152,6 @@ function init() {
 	/////////////////////
 	// Plane Geometry //
 	///////////////////
-	var img = new Image();	
 	img.src = imageSource;
 	img.onload = function () {
 		createShape(img);	
@@ -127,6 +170,17 @@ function init() {
 				tog = true;
 			} else {
 				axis.visible = true;
+				tog = false;
+			}
+		}
+		
+		if(e.keyCode == 13) {
+			console.log('enter');
+			if(!tog) {
+				pause = true;
+				tog = true;
+			} else {
+				pause = false;
 				tog = false;
 			}
 		}
@@ -174,38 +228,96 @@ function createShape(img) {
 	var multiplier = 4;
 	
 	// Create Geometry
-    var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
+   // var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
+   var geometry = new THREE.PlaneGeometry( 40 , 40, 10, 10);
+	
+	
 	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
 	
 	// Randomize Mesh Vert
+	
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-		geometry.vertices[i].z = Math.random() * randEl;
+		//geometry.vertices[i].z = Math.random() * randEl;
+		//geometry.vertices[i].z = 0;
+		/*
+		if(i %4){
+			/geometry.vertices[i].z = Math.random() * randEl;
+			geometry.vertices[i].z = 0;
+		} else {
+			geometry.vertices[i].z = 0;
+		}
+		*/
+		
+		geometry.vertices[i].z = 50;
+		
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
 
+	
+	
 	// Save copy of Base Geometry
 	baseGeo = geometry.clone();
 	
 	// Get Typeface Geometry
 	var data = getTypeData(img);
+		
+	/*
+	function listToMatrix(list, elementsPerSubArray) {
+	    var matrix = [], i, k;
+
+	    for (i = 0, k = -1; i < list.length; i++) {
+	        if (i % elementsPerSubArray === 0) {
+	            k++;
+	            matrix[k] = [];
+	        }
+
+	        matrix[k].push(list[i]);
+	    }
+
+	    return matrix;
+	}
+	
+	var matrix = listToMatrix(geometry.vertices, 40);
+	
+	geometry.vertices[40].z = 75;
+	
+	console.log(matrix);
+	*/
 	
 	// Get Update Geometry based on Typeface Data
+	/*
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-		if(data[i] > 0) {
-			geometry.vertices[i].z = maxEl ;
+		if(data[i] > 0) {			
+			//geometry.vertices[i].z = data[i] ;
+			//geometry.vertices[i].z = 250
 		}
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
+	*/
 	
 	// Assign Vertex colors based on Z index
 	for (var i = 0, l = geometry.faces.length; i < l; i++) {
+		
 		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
 		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
 		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
+		
+		if(i%2) {
+			//geometry.faces.splice(i, 1);
+		} else {
+			
+		}
 	}
 	
+	/*
+	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+		if(i % img.width){
+			console.log('row');
+		}
+	}
+	*/
 	
-
+	geometry.vertices
 
 	// Geometry needs updating
 	geometry.computeFaceNormals();
@@ -218,8 +330,9 @@ function createShape(img) {
 	
 	
 	// Produce mesh
-	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
-	
+	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( {wireframe: true, vertexColors: THREE.VertexColors } ));
+//mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { wireframe: true } ));
+		
 	// Add to scene
 	scene.add(mesh);
 	
@@ -242,6 +355,11 @@ function createShape(img) {
 
 	
 }
+
+function map(x, in_min, in_max, out_min, out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 	
 function getTypeData(img) {
     var canvas = document.createElement( 'canvas' );
@@ -255,7 +373,7 @@ function getTypeData(img) {
     for ( var i = 0; i < size; i ++ ) {
         data[i] = 0
     }
-
+	
     var imgd = context.getImageData(0, 0, canvas.width , canvas.height);
     var pix = imgd.data;
 	
@@ -264,7 +382,8 @@ function getTypeData(img) {
     	for ( var x = 0; x < canvas.width; x ++ ) {
 			var pixel = context.getImageData(x, y, 1, 1);
 			if(pixel.data[0] > 0) {
-				data[j] = 20; 
+				data[j] =  map(pixel.data[0], 0, 255, 0, maxEl); 
+				//data[j] =  10; 
 			}
 			j++;
 		}
@@ -280,27 +399,90 @@ function animate() {
 		update();
 	}
 }
+var theta = 0.0; 
+var amplitude = 75.0;  // Height of wave
 
 var doOnce = true;
+var getLocation;
 function update() {
 	//mesh.rotation.x += 0.005;
 	//mesh.rotation.y += 0.005;
 	//mesh.rotation.z += 0.005;
-		
-	var t = clock.getElapsedTime();
-	var movement = (maxEl) * Math.sin(t*2);
-	movement = Math.floor(movement);
+	
+	
+	
+	
+	  
 
+	
+	var t = clock.getElapsedTime();
+	var movement = maxEl * Math.sin(t*2);
+	movement = Math.floor(movement);
+	
+	if(pause) {
+		movement = getLocation;
+	} else {
+		getLocation = movement;	
+	}
+	
+	//console.log( 20+ 10 *Math.sin(t*2));
+	
+	//console.log(Math.sin(t)+1);
+	
+	//console.log(Math.sin(t)+1);
+
+	// console.log( Math.sin(t) *10  );
+	
+	//Math.random()
+	
+	
+	var x = theta;
+	/*
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
-		mesh.geometry.vertices[i].z = movement; 
+		var movement = maxEl * Math.sin(t*2);
+		var newMovement = Math.sin(t*2);
+	
+		if(i%2) {
+			mesh.geometry.vertices[i].z = 50;
+		 	//mesh.geometry.vertices[i].z +=  Math.sin(t*2);
+		} else {
+			mesh.geometry.vertices[i].z = 100;
+		}
+	
+	//	mesh.geometry.vertices[i].z = ( Math.sin( ( t ) * 0.3 ) * 50 );
+		
+	    // For every x value, calculate a y value with sine function
+	    
+	    // mesh.geometry.vertices[i].z = Math.sin(t*2)*maxEl;
+		
+		//mesh.geometry.vertices[i].z = movement*Math.random(); 
+		//mesh.geometry.vertices[i].z +=  Math.sin(t*2);
+		
+		//mesh.geometry.vertices[i].z +=  (newMovement + Math.random()*2);
+		
+	//	mesh.geometry.vertices[i].z = baseGeo.vertices[i].z +( Math.random()*5) *Math.sin(t*2);
+		
+	//	mesh.geometry.vertices[i].z = baseGeo.vertices[i].z*Math.random() + 10 *Math.sin(t*2)
+	
+	
+		//mesh.geometry.vertices[i].z = baseGeo.vertices[i].z + Math.sin(t*2)
+	
+	
+		//mesh.geometry.vertices[i].z = Math.sin(t*2);
+		
+		//mesh.geometry.vertices[i].z = savedGeo.vertices[i].z ; 					
+		
 	
 		if (movement >= savedGeo.vertices[i].z) {
 			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z ; 					
 		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
 			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;			
 		}
+		
 		faceColors[i] = gradient[Math.floor(mesh.geometry.vertices[i].z)];
 	}
+	*/
+
 
 	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
 		var newColorA = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
@@ -313,6 +495,8 @@ function update() {
 	
 	if(doOnce) {
 		doOnce = false;
+		console.log(img.width);
+		console.log(img.height);
 	}
 	
 	mesh.geometry.colorsNeedUpdate = true;

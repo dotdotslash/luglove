@@ -1,9 +1,32 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Extrude 2</title>
-	<meta charset="utf-8">
+	<title>Extrude 11</title>
+	<meta charset="utf-11">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+<style>
+/*
+	body, html {
+		height: 100%;
+	}
+	body {
+
+	
+		background: -webkit-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -moz-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -o-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: -ms-linear-gradient(90deg, #0003AD, #FC00F5);
+		
+		background: linear-gradient(90deg, #0003AD, #FC00F5);
+		
+	}
+*/
+</style>
+
 </head>
 <body>
 
@@ -12,7 +35,6 @@
 <script src="../js/stats.min.js"></script>
 <script src="../js/ImprovedNoise.js"></script>
 <script src="../js/controls/OrbitControls.js"></script>
-
 <script src="../js-helpers/jsGradient.js"></script>
 
 <div id="ThreeJS" style="position: fixed; left:0px; top:0px"></div>
@@ -21,14 +43,31 @@
 /////////////////////
 // Geometry Variables // 	
 ///////////////////	
-var maxEl = 80;
-var randEl = 10;
-var imageSource = "../textures/type-t-01.png";
+var maxEl = 250;
+var randEl = 20;
+var imageSource = "../textures/type-t-08.png";
+var img = new Image();	
+	img.src = imageSource;
 
 /////////////////////
 // Terrain colors // 	
 ///////////////////	
-var gradient = jsgradient.generateGradient('#2A085E', '#DC3058', maxEl+1);
+
+
+
+
+var firstGradient = jsgradient.generateGradient('#FFFFFF', '#FF0000', (maxEl/2));
+
+var secondGradient = jsgradient.generateGradient('#FF0000', '#00FF00', (maxEl/2)+1);
+
+var thirdGradient = jsgradient.generateGradient('#00FF00', '#0000FF', 50);
+
+var lol = firstGradient.concat(secondGradient);
+ 
+var gradient = lol.concat(thirdGradient);
+//console.log(gradient);
+
+
 
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
@@ -42,6 +81,7 @@ var savedGeo = null;
 var startAni = false;
 var faceColors = [];
 var axis;
+var pause;
 		
 init();
 animate();
@@ -52,8 +92,8 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( gradient[0] );
-	scene.fog = new THREE.Fog( gradient[0], 0.0020 );
+	//scene.background = new THREE.Color( gradient[0] );
+	//scene.fog = new THREE.Fog( gradient[0], 0.0020 );
 	//scene.fog = new THREE.FogExp2( colors[0], 0.0020 );
 	
 	
@@ -66,13 +106,19 @@ function init() {
 	camera.lookAt(scene.position);	
 	
 	// RENDERER
-	if ( Detector.webgl ) 
+	if ( Detector.webgl ) {
+		//renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
 		renderer = new THREE.WebGLRenderer({antialias:true});
-	else
+		
+	}
+	else {
 		renderer = new THREE.CanvasRenderer(); 
+		
+	}
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	container = document.getElementById( 'ThreeJS' );
 	container.appendChild( renderer.domElement );
+	//renderer.setClearColor( 0x000000, 0 ); // the default
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -108,8 +154,6 @@ function init() {
 	/////////////////////
 	// Plane Geometry //
 	///////////////////
-	var img = new Image();	
-	img.src = imageSource;
 	img.onload = function () {
 		createShape(img);	
 	};	
@@ -127,6 +171,17 @@ function init() {
 				tog = true;
 			} else {
 				axis.visible = true;
+				tog = false;
+			}
+		}
+		
+		if(e.keyCode == 13) {
+			console.log('enter');
+			if(!tog) {
+				pause = true;
+				tog = true;
+			} else {
+				pause = false;
 				tog = false;
 			}
 		}
@@ -169,19 +224,32 @@ function drawAxis() {
 }
 
 function createShape(img) {
-	w = img.width -1;
-	h = img.height -1;
+	//w = img.width -1;
+	//h = img.height -1;
+	w = 20;
+	h = 20;
+	
 	var multiplier = 4;
 	
 	// Create Geometry
     var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
 	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
 	
-	// Randomize Mesh Vert
+	//Create material 
+	var material = new THREE.MeshLambertMaterial( { wireframe: true, color: 0xffffff, morphTargets: true } );
+	
+	//var material = new THREE.MeshBasicMaterial( { morphTargets: true, color: 0xFF0000 } )
+	//var material = new THREE.MeshBasicMaterial( { morphTargets: true, vertexColors: THREE.VertexColors } )
+	//var material = new THREE.MeshBasicMaterial( { wireframe: true } )
+	
+	
+	// Randomize Geo Vert
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		geometry.vertices[i].z = Math.random() * randEl;
+		//geometry.vertices[i].z = 0;
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
+	
 
 	// Save copy of Base Geometry
 	baseGeo = geometry.clone();
@@ -189,36 +257,88 @@ function createShape(img) {
 	// Get Typeface Geometry
 	var data = getTypeData(img);
 	
-	// Get Update Geometry based on Typeface Data
-	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+	
+	console.log(geometry.vertices);
+	// construct 8 blend shapes
+	for ( var i = 0; i < geometry.vertices.length; i ++ ) {		
+		var vertices = [];
+			
+		
+		//vertices.push( {x: 0, y: 0, z: 0} );
+		vertices.push( geometry.vertices[ i ].clone() );
+		
+		
+		vertices[ vertices.length - 1 ].x = 0;
+		vertices[ vertices.length - 1 ].y = 20;
+		vertices[ vertices.length - 1 ].z = 100;
+		
+		console.log(vertices);
+		
+		// geometry.morphTargets.push( { name: "target" + i, vertices: vertices } );
+		
+		//console.log(vertices);
+	//	{ name: "target" + i, vertices: vertices }
+		
+		//console.log(geometry.vertices[i]);
+		/*
+		console.log(geometry.vertices[i].x);
+		console.log(geometry.vertices[i].y);
+		console.log(geometry.vertices[i].z);
+		*/
+		/*
+		vertices.push( geometry.vertices[ v ].clone() );
+		
+		vertices[ vertices.length - 1 ].x = 0;
+		vertices[ vertices.length - 1 ].y = 20;
+		vertices[ vertices.length - 1 ].z = 100;
+		
 		if(data[i] > 0) {
-			geometry.vertices[i].z = maxEl ;
+			geometry.vertices[i].z = data[i]
+			geometry.vertices[i].z = data[i] ;
+		} 
+		*/
+		
+		
+		//geometry.morphTargets.push( { name: "target" + i, vertices: vertices } );
+		
+		
+		/*
+		for ( var v = 0; v < geometry.vertices.length; v ++ ) {
+			vertices.push( geometry.vertices[ v ].clone() );
+			if ( v === i ) {
+				vertices[ vertices.length - 1 ].x *= 2;
+				vertices[ vertices.length - 1 ].y *= 2;
+				vertices[ vertices.length - 1 ].z *= 2;
+			}
 		}
-		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
+		*/
+		// geometry.morphTargets.push( { name: "target" + i, vertices: vertices } );
 	}
 	
+	//geometry.morphTargets.push( { name: "target", vertices: vertices } );
+	
+	console.log(vertices);
+	console.log(geometry.morphTargets);
+	
+	/*
 	// Assign Vertex colors based on Z index
 	for (var i = 0, l = geometry.faces.length; i < l; i++) {
 		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
 		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
 		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
 	}
+	*/
 	
-	
-
-
+	/*
 	// Geometry needs updating
 	geometry.computeFaceNormals();
 	geometry.colorsNeedUpdate = true;
 	geometry.verticesNeedUpdate = true;
-  //  geometry.dynamic = true;
-	
-	// Copy New changes of Geometry
-	savedGeo = geometry.clone();
-	
+ 	*/
 	
 	// Produce mesh
-	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } ));
+	mesh = new THREE.Mesh( geometry, material);
+	
 	
 	// Add to scene
 	scene.add(mesh);
@@ -226,22 +346,13 @@ function createShape(img) {
 	
 	// Okay to animate
 	startAni = true;
-	/*
-	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
-		faceColors[i] = gradient[Math.floor(mesh.geometry.vertices[i].z)];
-	}
-	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
-		var newColorA = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
-			mesh.geometry.faces[i].vertexColors[0].copy(newColorA); 
-		var newColorB = new THREE.Color(faceColors[mesh.geometry.faces[i].b]);
-			mesh.geometry.faces[i].vertexColors[1].copy(newColorB); 
-		var newColorC = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);
-			mesh.geometry.faces[i].vertexColors[2].copy(newColorC); 
-	}
-	*/
-
 	
 }
+
+function map(x, in_min, in_max, out_min, out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 	
 function getTypeData(img) {
     var canvas = document.createElement( 'canvas' );
@@ -255,7 +366,7 @@ function getTypeData(img) {
     for ( var i = 0; i < size; i ++ ) {
         data[i] = 0
     }
-
+	
     var imgd = context.getImageData(0, 0, canvas.width , canvas.height);
     var pix = imgd.data;
 	
@@ -264,7 +375,8 @@ function getTypeData(img) {
     	for ( var x = 0; x < canvas.width; x ++ ) {
 			var pixel = context.getImageData(x, y, 1, 1);
 			if(pixel.data[0] > 0) {
-				data[j] = 20; 
+				data[j] =  map(pixel.data[0], 0, 255, 0, maxEl); 
+				//data[j] =  10; 
 			}
 			j++;
 		}
@@ -282,15 +394,24 @@ function animate() {
 }
 
 var doOnce = true;
+var getLocation;
 function update() {
 	//mesh.rotation.x += 0.005;
 	//mesh.rotation.y += 0.005;
 	//mesh.rotation.z += 0.005;
 		
+	
 	var t = clock.getElapsedTime();
 	var movement = (maxEl) * Math.sin(t*2);
 	movement = Math.floor(movement);
-
+	
+	if(pause) {
+		movement = getLocation;
+	} else {
+		getLocation = movement;	
+	}
+	
+/*
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
 		mesh.geometry.vertices[i].z = movement; 
 	
@@ -310,13 +431,14 @@ function update() {
 		var newColorC = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);
 			mesh.geometry.faces[i].vertexColors[2].copy(newColorC); 
 	}
+*/
 	
 	if(doOnce) {
 		doOnce = false;
 	}
 	
-	mesh.geometry.colorsNeedUpdate = true;
-	mesh.geometry.verticesNeedUpdate = true;
+	//mesh.geometry.colorsNeedUpdate = true;
+	//mesh.geometry.verticesNeedUpdate = true;
    // mesh.geometry.dynamic = true;
 	
 	controls.update();

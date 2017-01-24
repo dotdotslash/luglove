@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Extrude 2</title>
+	<title>Extrude 6</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -12,7 +12,6 @@
 <script src="../js/stats.min.js"></script>
 <script src="../js/ImprovedNoise.js"></script>
 <script src="../js/controls/OrbitControls.js"></script>
-
 <script src="../js-helpers/jsGradient.js"></script>
 
 <div id="ThreeJS" style="position: fixed; left:0px; top:0px"></div>
@@ -21,14 +20,16 @@
 /////////////////////
 // Geometry Variables // 	
 ///////////////////	
-var maxEl = 80;
+var maxEl = 200;
 var randEl = 10;
-var imageSource = "../textures/type-t-01.png";
+var imageSource = "../textures/type-t-06.png";
 
 /////////////////////
 // Terrain colors // 	
 ///////////////////	
-var gradient = jsgradient.generateGradient('#2A085E', '#DC3058', maxEl+1);
+
+
+var gradient = jsgradient.generateGradient('#0003AD', '#FC00F5', maxEl+1);
 
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
@@ -42,6 +43,7 @@ var savedGeo = null;
 var startAni = false;
 var faceColors = [];
 var axis;
+var pause;
 		
 init();
 animate();
@@ -66,10 +68,13 @@ function init() {
 	camera.lookAt(scene.position);	
 	
 	// RENDERER
-	if ( Detector.webgl ) 
+	if ( Detector.webgl ) {
 		renderer = new THREE.WebGLRenderer({antialias:true});
-	else
+	}
+	else {
 		renderer = new THREE.CanvasRenderer(); 
+		
+	}
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	container = document.getElementById( 'ThreeJS' );
 	container.appendChild( renderer.domElement );
@@ -131,6 +136,17 @@ function init() {
 			}
 		}
 		
+		if(e.keyCode == 13) {
+			console.log('enter');
+			if(!tog) {
+				pause = true;
+				tog = true;
+			} else {
+				pause = false;
+				tog = false;
+			}
+		}
+		
 	});
 }
 
@@ -178,10 +194,13 @@ function createShape(img) {
 	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
 	
 	// Randomize Mesh Vert
+	
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-		geometry.vertices[i].z = Math.random() * randEl;
+		//geometry.vertices[i].z = Math.random() * randEl;
+		geometry.vertices[i].z = 0;
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
+	
 
 	// Save copy of Base Geometry
 	baseGeo = geometry.clone();
@@ -192,7 +211,7 @@ function createShape(img) {
 	// Get Update Geometry based on Typeface Data
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		if(data[i] > 0) {
-			geometry.vertices[i].z = maxEl ;
+			geometry.vertices[i].z = data[i] ;
 		}
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
@@ -242,6 +261,11 @@ function createShape(img) {
 
 	
 }
+
+function map(x, in_min, in_max, out_min, out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 	
 function getTypeData(img) {
     var canvas = document.createElement( 'canvas' );
@@ -255,7 +279,7 @@ function getTypeData(img) {
     for ( var i = 0; i < size; i ++ ) {
         data[i] = 0
     }
-
+	
     var imgd = context.getImageData(0, 0, canvas.width , canvas.height);
     var pix = imgd.data;
 	
@@ -264,7 +288,7 @@ function getTypeData(img) {
     	for ( var x = 0; x < canvas.width; x ++ ) {
 			var pixel = context.getImageData(x, y, 1, 1);
 			if(pixel.data[0] > 0) {
-				data[j] = 20; 
+				data[j] =  map(pixel.data[0], 0, 255, 0, maxEl); 
 			}
 			j++;
 		}
@@ -282,14 +306,23 @@ function animate() {
 }
 
 var doOnce = true;
+var getLocation;
 function update() {
 	//mesh.rotation.x += 0.005;
 	//mesh.rotation.y += 0.005;
 	//mesh.rotation.z += 0.005;
 		
+	
 	var t = clock.getElapsedTime();
 	var movement = (maxEl) * Math.sin(t*2);
 	movement = Math.floor(movement);
+	
+	if(pause) {
+		movement = getLocation;
+	} else {
+		getLocation = movement;	
+	}
+	
 
 	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
 		mesh.geometry.vertices[i].z = movement; 

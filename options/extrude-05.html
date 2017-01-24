@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Extrude 2</title>
+	<title>Extrude 5</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -21,9 +21,9 @@
 /////////////////////
 // Geometry Variables // 	
 ///////////////////	
-var maxEl = 80;
+var maxEl = 60;
 var randEl = 10;
-var imageSource = "../textures/type-t-01.png";
+var imageSource = "../textures/type-t-05.png";
 
 /////////////////////
 // Terrain colors // 	
@@ -192,7 +192,7 @@ function createShape(img) {
 	// Get Update Geometry based on Typeface Data
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		if(data[i] > 0) {
-			geometry.vertices[i].z = maxEl ;
+			geometry.vertices[i].z = data[i] ;
 		}
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
@@ -242,6 +242,11 @@ function createShape(img) {
 
 	
 }
+
+function map(x, in_min, in_max, out_min, out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 	
 function getTypeData(img) {
     var canvas = document.createElement( 'canvas' );
@@ -255,7 +260,7 @@ function getTypeData(img) {
     for ( var i = 0; i < size; i ++ ) {
         data[i] = 0
     }
-
+	
     var imgd = context.getImageData(0, 0, canvas.width , canvas.height);
     var pix = imgd.data;
 	
@@ -264,7 +269,7 @@ function getTypeData(img) {
     	for ( var x = 0; x < canvas.width; x ++ ) {
 			var pixel = context.getImageData(x, y, 1, 1);
 			if(pixel.data[0] > 0) {
-				data[j] = 20; 
+				data[j] =  map(pixel.data[0], 0, 255, 0, maxEl); 
 			}
 			j++;
 		}
