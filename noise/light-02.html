@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Extrude 9</title>
-	<meta charset="utf-8">
+	<title>Light 02</title>
+	<meta charset="utf-11">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
 <style>
+/*
 	body, html {
 		height: 100%;
 	}
@@ -23,6 +24,7 @@
 		background: linear-gradient(90deg, #0003AD, #FC00F5);
 		
 	}
+*/
 </style>
 
 </head>
@@ -35,23 +37,30 @@
 <script src="../js/controls/OrbitControls.js"></script>
 <script src="../js-helpers/jsGradient.js"></script>
 
+<script src="../js/libs/dat.gui.min.js"></script>
+
+
+
+
 <div id="ThreeJS" style="position: fixed; left:0px; top:0px"></div>
 <script>
 
 /////////////////////
 // Geometry Variables // 	
 ///////////////////	
-var maxEl = 200;
+var maxEl = 250;
 var randEl = 150;
-var imageSource = "../textures/type-t-08.png";
+var imageSource = "../textures/type-t-08.png"; //"../textures/acorn.png"; 
 
 /////////////////////
 // Terrain colors // 	
 ///////////////////	
 
 
-var gradient = jsgradient.generateGradient('#0003AD', '#FC00F5', maxEl+1);
 
+ 
+ var gradient = jsgradient.generateGradient('#FF0000', '#00FF00', (maxEl/2));
+ 
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
 var clock = new THREE.Clock();
@@ -59,13 +68,15 @@ var clock = new THREE.Clock();
 // custom global variables
 var cube;
 var mesh = null;
-var baseGeo = null;
-var savedGeo = null;
 var startAni = false;
 var faceColors = [];
 var axis;
 var pause;
-		
+
+	
+var localPlane = new THREE.Plane( new THREE.Vector3( 0, 0, 1 ), -1 ),
+	globalPlane = new THREE.Plane( new THREE.Vector3( - 1, 0, 1 ), 0.1 );
+
 init();
 animate();
 
@@ -75,9 +86,13 @@ animate();
 function init() {
 	// SCENE
 	scene = new THREE.Scene();
+	scene.background = new THREE.Color( 0xFFFFFF );
+	
 	//scene.background = new THREE.Color( gradient[0] );
 	//scene.fog = new THREE.Fog( gradient[0], 0.0020 );
 	//scene.fog = new THREE.FogExp2( colors[0], 0.0020 );
+	
+
 	
 	
 	// CAMERA
@@ -87,10 +102,19 @@ function init() {
 	scene.add(camera);
 	camera.position.set(-100,25,150);
 	camera.lookAt(scene.position);	
+
+
+
+
+
 	
+	
+		
 	// RENDERER
 	if ( Detector.webgl ) {
-		renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
+		//renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
+		renderer = new THREE.WebGLRenderer({antialias:true});
+		
 	}
 	else {
 		renderer = new THREE.CanvasRenderer(); 
@@ -99,10 +123,50 @@ function init() {
 	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	container = document.getElementById( 'ThreeJS' );
 	container.appendChild( renderer.domElement );
-	renderer.setClearColor( 0x000000, 0 ); // the default
+	//renderer.setClearColor( 0x000000, 0 ); // the default
+// ***** Clipping setup (renderer): *****
+				
+				var globalPlanes = [ globalPlane ],
+					Empty = Object.freeze( [] );
+				renderer.clippingPlanes = Empty; // GUI sets it to globalPlanes
+				renderer.localClippingEnabled = true;
 
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+// GUI
+
+				var gui = new dat.GUI(),
+					folderLocal = gui.addFolder( "Local Clipping" ),
+					propsLocal = {
+
+						get 'Enabled'() { return renderer.localClippingEnabled; },
+						set 'Enabled'( v ) { renderer.localClippingEnabled = v; },
+
+						get 'Plane'() { return localPlane.constant; },
+						set 'Plane'( v ) { localPlane.constant = v }
+
+					},
+
+					folderGlobal = gui.addFolder( "Global Clipping" ),
+					propsGlobal = {
+
+						get 'Enabled'() { return renderer.clippingPlanes !== Empty; },
+						set 'Enabled'( v  ) {
+								renderer.clippingPlanes = v ? globalPlanes : Empty; },
+
+						get 'Plane'() { return globalPlane.constant; },
+						set 'Plane'( v ) { globalPlane.constant = v; }
+
+					};
+
+				folderLocal.add( propsLocal, 'Enabled' );
+				folderLocal.add( propsLocal, 'Plane', -100, 100 );
+
+				folderGlobal.add( propsGlobal, 'Enabled' );
+				folderGlobal.add( propsGlobal, 'Plane', -0.4, 3 );
+
+			
 	
 	// STATS
 	stats = new Stats();
@@ -112,20 +176,39 @@ function init() {
 	container.appendChild( stats.domElement );
 	
 	// LIGHT
+	
+	var sphere = new THREE.SphereGeometry(20, 16, 8 );
+	
 	var lights = [];
-	lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-	lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-	lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 0 ] = new THREE.PointLight( 0x00FFFF, 0.25, 0,2 );
+	lights[ 1 ] = new THREE.PointLight( 0x0040ff, 0.25, 0,2 );
+	lights[ 2 ] = new THREE.PointLight( 0x80ff80, 0.25, 0,2 );
+	lights[ 3 ] = new THREE.PointLight( 0xff0000, 0.25, 0,2 );
 
-	lights[ 0 ].position.set( 0, 200, 0 );
-	lights[ 1 ].position.set( 100, 200, 100 );
-	lights[ 2 ].position.set( - 100, - 200, - 100 );
-
+	lights[ 0 ].position.set( 0, 200, 200 );
+	lights[ 1 ].position.set( 100, 100, 200 );
+	lights[ 2 ].position.set( - 100, - 100, 100 );
+	lights[ 3 ].position.set(0, 75, 150 );
+/*
+	lights[ 0 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x00FFFF } ) ) );
+	lights[ 1 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x0040ff } ) ) );
+	lights[ 2 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x80ff80 } ) ) );
+	lights[ 3 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xff0000 } ) ) );
+	*/
+	
 	scene.add( lights[ 0 ] );
 	scene.add( lights[ 1 ] );
 	scene.add( lights[ 2 ] );
-
+	//scene.add( lights[ 3 ] );
 	
+	var spotLight = new THREE.SpotLight( 0xffffff );
+	spotLight.position.set( 100, -300,400 );
+	scene.add( spotLight );
+	
+	
+	
+	
+
 	///////////////
 	// Draw XYZ //
 	/////////////
@@ -211,53 +294,80 @@ function createShape(img) {
 	h = img.height -1;
 	var multiplier = 4;
 	
+	
+// ***** Clipping planes: *****
+
 	// Create Geometry
     var geometry = new THREE.PlaneGeometry( w*multiplier , h*multiplier, w, h);
 	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );			
 	
+
 	// Randomize Mesh Vert
-	
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-		//geometry.vertices[i].z = Math.random() * randEl;
+		//geometry.vertices[i].z = Math.random() * randEl/6;
 		geometry.vertices[i].z = 0;
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
 	}
-	// Save copy of Base Geometry
-	baseGeo = geometry.clone();
 	
+
 	// Get Typeface Geometry
 	var data = getTypeData(img);
+	
 	
 	// Get Update Geometry based on Typeface Data
 	for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 		if(data[i] > 0) {
-			//geometry.vertices[i].z = (randEl/2) + Math.random() * (randEl/2);
-			geometry.vertices[i].z = data[i] ;
-			//geometry.vertices[i].z = 250
-		} 
+			//geometry.vertices[i].z = Math.random() * (randEl/2);
+			geometry.vertices[i].z = 0;
+		}
 		faceColors.push(gradient[Math.floor(geometry.vertices[i].z)]);	
-	}
-	
+	} Math.random() * 50
+
 	// Assign Vertex colors based on Z index
 	for (var i = 0, l = geometry.faces.length; i < l; i++) {
-		
-		geometry.faces[i].vertexColors[0] = new THREE.Color(faceColors[geometry.faces[i].a]);
-		geometry.faces[i].vertexColors[1] = new THREE.Color(faceColors[geometry.faces[i].b]);
-		geometry.faces[i].vertexColors[2] = new THREE.Color(faceColors[geometry.faces[i].c]);
-		
+		geometry.faces[i].vertexColors[0] = new THREE.Color(Math.random(),Math.random(),Math.random());
+		geometry.faces[i].vertexColors[1] = new THREE.Color(Math.random(),Math.random(),Math.random());
+		geometry.faces[i].vertexColors[2] = new THREE.Color(Math.random(),Math.random(),Math.random());
 	}
+
+
+	
+	for ( var i = 0; i < 1; i ++ ) {
+		var vertices = [];
+		for ( var v = 0; v < geometry.vertices.length; v ++ ) {
+			vertices.push( geometry.vertices[ v ].clone() );			
+			vertices[ vertices.length - 1 ].x = vertices[ vertices.length - 1 ].x;
+			vertices[ vertices.length - 1 ].y = vertices[ vertices.length - 1 ].y;
+			if(data[v] > 0) {
+				vertices[ vertices.length - 1 ].z = Math.random() * 50;	
+				//vertices[ vertices.length - 1 ].z = 50;			
+				
+				//geometry.vertices[i].z = Math.random() * (randEl/2);
+			}
+		}
+		geometry.morphTargets.push( { name: "target" + i, vertices: vertices } );
+	}
+		
 
 	// Geometry needs updating
 	geometry.computeFaceNormals();
 	geometry.colorsNeedUpdate = true;
 	geometry.verticesNeedUpdate = true;
 	
-	// Copy New changes of Geometry
-	savedGeo = geometry.clone();
 	
 	// Produce mesh
-	mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors}) );
-	//mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { wireframe: true } ));
+	var material = new THREE.MeshPhongMaterial( { 
+		color: 0xffffff, 
+		morphTargets: true, 
+		isMeshNormalMaterial: true,
+		clippingPlanes: [ localPlane ]
+						
+	});
+
+	
+	
+	mesh = new THREE.Mesh( geometry, material);
+
 		
 	// Add to scene
 	scene.add(mesh);
@@ -265,6 +375,7 @@ function createShape(img) {
 	
 	// Okay to animate
 	startAni = true;
+
 	
 }
 
@@ -295,7 +406,6 @@ function getTypeData(img) {
 			var pixel = context.getImageData(x, y, 1, 1);
 			if(pixel.data[0] > 0) {
 				data[j] =  map(pixel.data[0], 0, 255, 0, maxEl); 
-				//data[j] =  10; 
 			}
 			j++;
 		}
@@ -321,8 +431,10 @@ function update() {
 		
 	
 	var t = clock.getElapsedTime();
-	var movement = (maxEl) * Math.sin(t*2);
-	movement = Math.floor(movement);
+	var movement = Math.sin(t*2);
+	mesh.morphTargetInfluences[ 0 ] = movement + 1;
+	
+
 	
 	if(pause) {
 		movement = getLocation;
@@ -330,26 +442,6 @@ function update() {
 		getLocation = movement;	
 	}
 	
-
-	for (var i = 0, l = mesh.geometry.vertices.length; i < l; i++) {
-		mesh.geometry.vertices[i].z = movement; 
-	
-		if (movement >= savedGeo.vertices[i].z) {
-			mesh.geometry.vertices[i].z = savedGeo.vertices[i].z ; 					
-		} else if (mesh.geometry.vertices[i].z <= baseGeo.vertices[i].z) {
-			mesh.geometry.vertices[i].z = baseGeo.vertices[i].z;			
-		}
-		faceColors[i] = gradient[Math.floor(mesh.geometry.vertices[i].z)];
-	}
-
-	for (var i = 0, l = mesh.geometry.faces.length; i < l; i++) {
-		var newColorA = new THREE.Color(faceColors[mesh.geometry.faces[i].a]);
-			mesh.geometry.faces[i].vertexColors[0].copy(newColorA); 
-		var newColorB = new THREE.Color(faceColors[mesh.geometry.faces[i].b]);
-			mesh.geometry.faces[i].vertexColors[1].copy(newColorB); 
-		var newColorC = new THREE.Color(faceColors[mesh.geometry.faces[i].c]);
-			mesh.geometry.faces[i].vertexColors[2].copy(newColorC); 
-	}
 	
 	if(doOnce) {
 		doOnce = false;
@@ -357,7 +449,7 @@ function update() {
 	
 	mesh.geometry.colorsNeedUpdate = true;
 	mesh.geometry.verticesNeedUpdate = true;
-   // mesh.geometry.dynamic = true;
+	
 	
 	controls.update();
 	stats.update();
