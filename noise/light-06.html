@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Light 05</title>
+	<title>Light 06</title>
 	<meta charset="utf-11">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
@@ -30,7 +30,7 @@
 ///////////////////	
 var maxEl = 250;
 var randEl = 150;
-var imageSource = "../textures/dji.png"; //"../textures/type-t-08.png"; //"../textures/acorn.png"; 
+var imageSource = "../textures/type-t-08.png"; //"../textures/acorn.png"; // "../textures/dji-02.png"; 
 
 /////////////////////
 // Terrain colors // 	
@@ -52,6 +52,7 @@ var startAni = false;
 var faceColors = [];
 var axis;
 var pause;
+var lights = [];
 
 	
 var localPlane = new THREE.Plane( new THREE.Vector3( 0, 0, 1 ), -1 ),
@@ -114,64 +115,75 @@ function init() {
 	// CONTROLS
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
 	
-// GUI
-
-				var gui = new dat.GUI(),
-					folderLocal = gui.addFolder( "Local Clipping" ),
-					propsLocal = {
-
-						get 'Enabled'() { return renderer.localClippingEnabled; },
-						set 'Enabled'( v ) { renderer.localClippingEnabled = v; },
-
-						get 'Plane'() { return localPlane.constant; },
-						set 'Plane'( v ) { localPlane.constant = v }
-
-					},
-
-					folderGlobal = gui.addFolder( "Global Clipping" ),
-					propsGlobal = {
-
-						get 'Enabled'() { return renderer.clippingPlanes !== Empty; },
-						set 'Enabled'( v  ) {
-								renderer.clippingPlanes = v ? globalPlanes : Empty; },
-
-						get 'Plane'() { return globalPlane.constant; },
-						set 'Plane'( v ) { globalPlane.constant = v; }
-
-					};
-
-				folderLocal.add( propsLocal, 'Enabled' );
-				folderLocal.add( propsLocal, 'Plane', -100, 100 );
-
-				folderGlobal.add( propsGlobal, 'Enabled' );
-				folderGlobal.add( propsGlobal, 'Plane', -0.4, 3 );
-
-			
 	
-	// STATS
+	//////////
+	// GUI //
+	////////
+	var gui = new dat.GUI();
+	
+	var folderLocal = gui.addFolder( "Local Clipping" ),
+		propsLocal = {
+
+			get 'Enabled'() { return renderer.localClippingEnabled; },
+			set 'Enabled'( v ) { renderer.localClippingEnabled = v; },
+
+			get 'Plane'() { return localPlane.constant; },
+			set 'Plane'( v ) { localPlane.constant = v }
+
+		};
+	folderLocal.add( propsLocal, 'Enabled' );
+	folderLocal.add( propsLocal, 'Plane', -100, 100 );
+	
+	
+	
+	var folderLights = gui.addFolder( "Lights" );
+		lightControls = new function () {
+			this.z = 100;
+ 			this.intensity = 0.75
+			this.distance = 140
+			this.decay = 1
+		};
+	folderLights.add(lightControls, 'z', 0, 400);
+	folderLights.add(lightControls, 'intensity', 0, 1);
+	folderLights.add(lightControls, 'distance', 0, 600);
+	folderLights.add(lightControls, 'decay', 0, 1);
+	
+	/*
+	var controls = new function () {
+	            this.rotationSpeed = 0.02;
+	            this.bouncingSpeed = 0.03;
+	        };
+	    gui.add(controls, 'rotationSpeed', 0, 0.5);
+	    gui.add(controls, 'bouncingSpeed', 0, 0.5);
+	*/
+
+	
+	////////////
+	// STATS //
+	//////////
 	stats = new Stats();
 	stats.domElement.style.position = 'absolute';
 	stats.domElement.style.bottom = '0px';
 	stats.domElement.style.zIndex = 100;
 	container.appendChild( stats.domElement );
 	
-	// LIGHT
-	
-	var sphere = new THREE.SphereGeometry(10, 16, 8 );
-	
 	
 	///////////////
 	// Lighting //
 	/////////////
+	var sphere = new THREE.SphereGeometry(10, 16, 8 );
 	
 	// Lights
-	var lights = [];
-	lights[ 0 ] = new THREE.PointLight( 0x00FFFF, 0.5, 200,1 );
-	lights[ 1 ] = new THREE.PointLight( 0x0040ff, 0.5, 200,1 );
-	lights[ 2 ] = new THREE.PointLight( 0x80ff80, 0.5, 200,1 );
-	lights[ 3 ] = new THREE.PointLight( 0xFF0000, 0.5, 200,1 );
-	lights[ 4 ] = new THREE.PointLight( 0xFFFF00, 0.5, 200,1 );
-	lights[ 5 ] = new THREE.PointLight( 0xec008c, 0.5, 200,1 );
+	lights[ 0 ] = new THREE.PointLight( 0x00FFFF, 0.5, 200, 1 );
+	lights[ 1 ] = new THREE.PointLight( 0x0040ff, 0.5, 200, 1 );
+	lights[ 2 ] = new THREE.PointLight( 0x80ff80, 0.5, 200, 1 );
+	lights[ 3 ] = new THREE.PointLight( 0xFF0000, 0.5, 200, 1 );
+	lights[ 4 ] = new THREE.PointLight( 0xFFFF00, 0.5, 200, 1 );
+	lights[ 5 ] = new THREE.PointLight( 0xec008c, 0.5, 200, 1 );
+	
+	lights[ 6 ] = new THREE.PointLight( 0x00FFFF, 0.5, 200, 1 );
+	lights[ 7 ] = new THREE.PointLight( 0xFF0000, 0.5, 200, 1 );
+	lights[ 8 ] = new THREE.PointLight( 0xdc7905, 0.5, 200, 1 );
 	
 	// Light Ball
 	lights[ 0 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x00FFFF } ) ) );
@@ -180,6 +192,10 @@ function init() {
 	lights[ 3 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xFF0000 } ) ) );
 	lights[ 4 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xFFFF00 } ) ) );
 	lights[ 5 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xec008c } ) ) );
+	
+	lights[ 6 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x00FFFF } ) ) );
+	lights[ 7 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xFF0000 } ) ) );
+	lights[ 8 ].add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0xdc7905 } ) ) );
 	
 	
 	// Light Position
@@ -195,10 +211,12 @@ function init() {
 	lights[ 1 ].position.set( 70, 10, 120 );
 	lights[ 2 ].position.set( -80, -20, 120 );
 	lights[ 3 ].position.set( 0, 25, 120 );
-	lights[ 4 ].position.set( 0, -25, 120 );
+	lights[ 4 ].position.set( 150, -25, 120 );
 	lights[ 5 ].position.set( -50, 50, 120 );
 	
-	
+	lights[ 6 ].position.set( -150, 50, 120 );
+	lights[ 7 ].position.set( -150, -50, 120 );
+	lights[ 8 ].position.set( 150, 50, 120 );
 	
 	
 	// Add Light to Scene
@@ -209,6 +227,14 @@ function init() {
 	scene.add( lights[ 4 ] );
 	scene.add( lights[ 5 ] );
 	
+	scene.add( lights[ 6 ] );
+	scene.add( lights[ 7 ] );
+	scene.add( lights[ 8 ] );
+	
+	
+	var ambient = new THREE.AmbientLight( 0x404040 ); // soft white light
+	scene.add( ambient );
+
 	/*
 	var whiteLight = new THREE.PointLight( 0xFFFFFF, 1, 100, 1);
 		whiteLight.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x000000 } ) ) );
@@ -216,15 +242,17 @@ function init() {
 	scene.add(whiteLight);	
 	*/
 	
-	/*
-	var spotLight = new THREE.SpotLight( 0xffffff );
+/*	
+	var spotLight = new THREE.SpotLight( 0x404040, .5, 1, 1, 1);
 	spotLight.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x000000 } ) ) );
-	spotLight.position.set( 100, -300,400 );
+	spotLight.position.set( 100, 0,400 );
+	
 	scene.add( spotLight );
-	*/
 	
+	//spotLight.castShadow = true;
+	console.log(spotLight);
+*/
 	
-
 	///////////////
 	// Draw XYZ //
 	/////////////
@@ -256,13 +284,11 @@ function init() {
 			if(!lightTog) {
 				for(i=0; i < lights.length; i++){
 					lights[i].children[0].visible = false;
-					//whiteLight.children[0].visible = false;
 				}
 				lightTog = true;
 			} else {
 				for(i=0; i < lights.length; i++){
 					lights[i].children[0].visible = true;
-					//whiteLight.children[0].visible = true;
 				}
 				lightTog = false;
 			}
@@ -376,7 +402,7 @@ function createShape(img) {
 			vertices[ vertices.length - 1 ].x = vertices[ vertices.length - 1 ].x;
 			vertices[ vertices.length - 1 ].y = vertices[ vertices.length - 1 ].y;
 			if(data[v] > 0) {
-				vertices[ vertices.length - 1 ].z = Math.random() * 10 + 40;	
+				vertices[ vertices.length - 1 ].z = Math.random() * 50;	
 				//vertices[ vertices.length - 1 ].z = 50;			
 			}
 		}
@@ -393,7 +419,6 @@ function createShape(img) {
 	// Produce mesh
 	var material = new THREE.MeshPhongMaterial( { 
 	//var material = new THREE.MeshLambertMaterial( { 	
-		
 		color: 0xffffff, 
 		morphTargets: true, 
 	//	isMeshNormalMaterial: true,
@@ -465,28 +490,31 @@ function update() {
 	//mesh.rotation.x += 0.005;
 	//mesh.rotation.y += 0.005;
 	//mesh.rotation.z += 0.005;
-		
+	if(doOnce) {
+		doOnce = false;
+	}
 	
 	var t = clock.getElapsedTime();
 	var movement = Math.sin(t*2);
 	mesh.morphTargetInfluences[ 0 ] = movement + 1;
-	
 
-	
+	var lightTarget = movement* 50 + 80;
+//	console.log(lightTarget);
 	if(pause) {
 		movement = getLocation;
 	} else {
 		getLocation = movement;	
 	}
 	
-	
-	if(doOnce) {
-		doOnce = false;
+	for(i=0; i < lights.length; i++) {
+		lights[i].position.z = lightTarget; //lightControls.z;
+		lights[i].intensity = lightControls.intensity;
+		lights[i].distance = lightControls.distance;
+		lights[i].decay = lightControls.decay;
 	}
 	
 	mesh.geometry.colorsNeedUpdate = true;
 	mesh.geometry.verticesNeedUpdate = true;
-	
 	
 	controls.update();
 	stats.update();
