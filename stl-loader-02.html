@@ -1,172 +1,258 @@
-
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - orbit controls</title>
+		<title>Custom</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
-				color: #000;
-				font-family:Monospace;
-				font-size:13px;
+				background:#000;
+				color:#fff;
+				padding:0;
+				margin:0;
+				overflow:hidden;
+				font-family:georgia;
 				text-align:center;
-				font-weight: bold;
-
-				background-color: #fff;
-				margin: 0px;
-				overflow: hidden;
 			}
-
+			a { color:skyblue; text-decoration:none }
 			#info {
-				color:#000;
 				position: absolute;
-				top: 0px; width: 100%;
-				padding: 5px;
-
-			}
-
-			a {
-				color: red;
+				width: 100%;
 			}
 		</style>
 	</head>
 
 	<body>
+		
 		<div id="container"></div>
+		
 
 		<script src="js/three.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/stats.min.js"></script>
 		<script src="js/loaders/STLLoader.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
-		
+		<script src="js/libs/dat.gui.min.js"></script>
+
+
 		<script>
-
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
 			var stats;
-
-			var camera, controls, scene, renderer;
+			var controls, camera, scene, renderer;
+			var cameraCube, sceneCube;
+			var textureEquirec, textureCube, textureSphere, customSphere, mrBumpy, crapMap, envTexture, lugBump, uvTexture;
+			var cubeMesh, sphereMesh;
+			var sphereMaterial;
+			var refract;
 
 			init();
 			animate();
 
 			function init() {
 
+				// CAMERAS
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 100000 );
+				camera.position.set( 0, 0, 1000 );
+				cameraCube = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 100000 );
+
+				controls = new THREE.OrbitControls( camera );
+				controls.minDistance = 500;
+				controls.maxDistance = 2500;
+
+				// SCENE
 				scene = new THREE.Scene();
-				//scene.fog = new THREE.FogExp2( 0x333333, 0.002 );
-				//scene.fog = new THREE.FogExp2( 0x000000,  0.00025 );
+				sceneCube = new THREE.Scene();
 
-				renderer = new THREE.WebGLRenderer();
-				//renderer.setClearColor( scene.fog.color );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				// Lights
+				var ambient = new THREE.AmbientLight( 0xffffff );
+				scene.add(ambient);
+				
+				var directionalLight = new THREE.DirectionalLight( 0xffc58f, 0.9 );
+				directionalLight.position.set( 0, 1, 0 );
+				scene.add(directionalLight);
 
-				var container = document.getElementById( 'container' );
-				container.appendChild( renderer.domElement );
+				// Textures
+				var r = "textures/cube/Bridge2/";
+				var urls = [ r + "posx.jpg", r + "negx.jpg",
+							 r + "posy.jpg", r + "negy.jpg",
+							 r + "posz.jpg", r + "negz.jpg" ];
 
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.z = 500;
+				textureCube = new THREE.CubeTextureLoader().load( urls );
+				textureCube.format = THREE.RGBFormat;
+				textureCube.mapping = THREE.CubeReflectionMapping;
 
-				controls = new THREE.OrbitControls( camera, renderer.domElement );
-				//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
-				controls.enableDamping = true;
-				controls.dampingFactor = 0.25;
-				controls.enableZoom = true;
+				var textureLoader = new THREE.TextureLoader();
 
-				// world
+				textureEquirec = textureLoader.load( "textures/2294472375_24a3b8ef46_o.jpg" );
+				textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
+				textureEquirec.magFilter = THREE.LinearFilter;
+				textureEquirec.minFilter = THREE.LinearMipMapLinearFilter;
+
+				textureSphere = textureLoader.load( "textures/metal.jpg" );
+				textureSphere.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				
+				
 				
 
-				var loader = new THREE.STLLoader();
-				loader.load( './models/test-lug.stl', function ( geometry ) {
-					
-					/*
-					var texture = new THREE.TextureLoader().load( 'textures/perlin.gif' );
-					
-					var specTex = new THREE.TextureLoader().load( 'textures/specular.gif' );
-					var bumpTex = new THREE.TextureLoader().load( 'textures/bump.gif' );
-						
-					texture.wrapS = specTex.wrapT = THREE.RepeatWrapping;
-					
-					specTex.wrapS = specTex.wrapT = THREE.RepeatWrapping;
-					
-					bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
-				*/	
-				/*		
-					texture.wrapS = THREE.RepeatWrapping;
-					texture.wrapT = THREE.RepeatWrapping;
-					texture.repeat.set( 4, 4 );
-				*/	
-					var material = new THREE.MeshBasicMaterial( { 
-						/*
-						color: 0x2194ce, 
-						emissive: 0x000000,
-						specular: 0x111111, 
-						shininess: 30, 
-						*/
-						//shading: THREE.FlatShading,
-						//specularMap: specTex,
-						//bumpMap: bumpTex
-						//map: texture
-					 } );
-					
-					//var material = new THREE.MeshBasicMaterial({color: 0xffffff, opacity: 1, wireframe: true} );
+				// Materials
 
-				//	material.bumpMap  = new THREE.TextureLoader().load( "textures/perlin.gif" );
-				//	material.bumpScale = 0.5
-					
-				//	material.normalMap  = new THREE.TextureLoader().load("textures/3314-normal.jpg");
-				/*	
-					material.map  = new THREE.TextureLoader().load("textures/perlin.gif");
-					material.wrapS = THREE.RepeatWrapping;
-					material.wrapT = THREE.RepeatWrapping;
-				*/	
-					
-					var mesh = new THREE.Mesh( geometry, material );
+				var equirectShader = THREE.ShaderLib[ "equirect" ];
 
-					
-					var box = new THREE.Box3().setFromObject( mesh );
-					console.log(box.getSize().z);
-					
-					mesh.position.set( 0, - (box.getSize().y/2) , 0);
-					mesh.rotation.set( -45, 0, 45 );
-					mesh.scale.set( 1, 1, 1 );
+				var equirectMaterial = new THREE.ShaderMaterial( {
+					fragmentShader: equirectShader.fragmentShader,
+					vertexShader: equirectShader.vertexShader,
+					uniforms: equirectShader.uniforms,
+					depthWrite: false,
+					side: THREE.BackSide,
+				//	
+				} );
+				equirectMaterial.uniforms[ "tEquirect" ].value = textureEquirec;
 
-					mesh.castShadow = true;
-					mesh.receiveShadow = true;
-
-					scene.add( mesh );
-				
-
+				var cubeShader = THREE.ShaderLib[ "cube" ];
+				var cubeMaterial = new THREE.ShaderMaterial( {
+					fragmentShader: cubeShader.fragmentShader,
+					vertexShader: cubeShader.vertexShader,
+					uniforms: cubeShader.uniforms,
+					depthWrite: false,
+					side: THREE.BackSide
 				} );
 
-				// lights
+				cubeMaterial.uniforms[ "tCube" ].value = textureCube;
 
-			
-				light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( -1, -1, -1 );
-				scene.add( light );
-				
-				/*
-				light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( 1, 1, 1 );
-				scene.add( light );
-				*/
-				
+				// Skybox
+				//CubeMaterial will create skybox texture from cube
+				cubeMesh = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100 ), equirectMaterial );
+				sceneCube.add( cubeMesh );
 
-				light = new THREE.AmbientLight( 0xffffff );
-				scene.add( light );
+				//
+				var geometry = new THREE.SphereGeometry( 400.0, 24, 24 );
+				//sphereMaterial = new THREE.MeshLambertMaterial( { envMap: textureCube } );	
+				
+				
+				customSphere = textureLoader.load( "textures/2294472375_24a3b8ef46_o.jpg" );
+				customSphere.mapping = THREE.EquirectangularReflectionMapping;
+				customSphere.magFilter = THREE.LinearFilter;
+				customSphere.minFilter = THREE.LinearMipMapLinearFilter;
+			//	customSphere.anisotropy = maxAnisotropy;
+				customSphere.anisotropy = 2.0;
+				
+				
+				//mrBumpy = textureLoader.load( "textures/brushed.gif" );
+				//mrBumpy = textureLoader.load( "textures/alum.jpg" );
+				mrBumpy = textureLoader.load("textures/scrapes-01.png");
+				//mrBumpy = textureLoader.load("textures/scrapes-02.png");
+				mrBumpy.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				crapMap = textureLoader.load("textures/scrapes-02.png");
+				crapMap.mapping = THREE.SphericalReflectionMapping;
+				
+				
+				/* ******************************
+				MATERIALLLLLLLLLLLLLLLLLLLL 
+				*******************************/
+				
+				sphereMaterial = new THREE.MeshStandardMaterial( {
+					//map: crapMap,
+					bumpScale: 3,
+					color:  0xa5a5a5,
+					emissive: 0x000000,
+					emissiveIntensity: 0.7,
+					metalness: 1.0,
+					roughness: 0.75,
+					refractionRatio: 2.0,
+					envMap: customSphere,
+					envMapIntensity: 1.75,
+					map: mrBumpy,
+					bumpMap: mrBumpy,
+					bumpScale: 1,
+					shading: THREE.SmoothShading
+				} );
+				
+				/* ******************************
+				MATERIALLLLLLLLLLLLLLLLLLLL 
+				*******************************/
+
+								
+				uvTexture = textureLoader.load("textures/UV_Grid_Sm.jpg");
+								
+										
+					
+					
+				
+				var loader = new THREE.STLLoader();
+				loader.load( './models/test-lug.stl', function ( geometry ) {
+					lugBump = textureLoader.load("textures/scrapes-01.png");
+					lugBump.wrapS = THREE.RepeatWrapping;
+					lugBump.wrapT = THREE.RepeatWrapping;
+					//lugBump.repeat.set( 2, 2 );
+					
+					envTexture = textureLoader.load( "textures/2294472375_24a3b8ef46_o.jpg" );
+					envTexture.mapping = THREE.EquirectangularReflectionMapping;
+					envTexture.magFilter = THREE.LinearFilter;
+					envTexture.minFilter = THREE.LinearMipMapLinearFilter;
+				//	customSphere.anisotropy = maxAnisotropy;
+					envTexture.anisotropy = 2.0;
+					
+					console.log(uvTexture);
+					
+	 				var material = new THREE.MeshStandardMaterial( {
+	 					map: uvTexture
+	 					/*
+						bumpScale: 3,
+						color:  0xa5a5a5,
+	 					emissive: 0x000000,
+	 					emissiveIntensity: 0.7,
+	 					metalness: 1.0,
+	 					roughness: 0.75,
+	 					refractionRatio: 2.0,
+	 					envMap: envTexture,
+	 					envMapIntensity: 1.75,
+	 					map: lugBump,
+	 					bumpMap: lugBump,
+	 					bumpScale: 1,
+	 					shading: THREE.SmoothShading
+						*/
+	 				} );
+					
+					
+					var mesh = new THREE.Mesh( geometry, material );
+					var box = new THREE.Box3().setFromObject( mesh );
+					
+					mesh.position.set( 0, - (box.getSize().y/2) , 0);
+					mesh.rotation.set( -20.42, 0, 0 );
+					mesh.scale.set( 10, 10, 10 );
+					//mesh.castShadow = true;
+					//mesh.receiveShadow = true;
+					mesh.position.set( 0, -200, 0 );
+					scene.add( mesh );
+				} );
+				
+				
+				
+				sphereMesh = new THREE.Mesh( geometry, sphereMaterial );
+
+				//scene.add( sphereMesh );
 
 				//
 
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.autoClear = false;
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setFaceCulling( THREE.CullFaceNone );
+				document.body.appendChild( renderer.domElement );
+
+				//
+				
+				
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
 				stats.domElement.style.zIndex = 100;
 				container.appendChild( stats.domElement );
-
-				//
+				
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
@@ -177,24 +263,33 @@
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 
+				cameraCube.aspect = window.innerWidth / window.innerHeight;
+				cameraCube.updateProjectionMatrix();
+
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 			}
 
+			//
+
 			function animate() {
 
 				requestAnimationFrame( animate );
-
-				controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
-
 				stats.update();
-
 				render();
+
+				controls.update();
 
 			}
 
 			function render() {
 
+				var timer = -0.0002 * Date.now();
+
+				camera.lookAt( scene.position );
+				cameraCube.rotation.copy( camera.rotation );
+
+				renderer.render( sceneCube, cameraCube );
 				renderer.render( scene, camera );
 
 			}
