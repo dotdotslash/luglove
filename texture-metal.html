@@ -25,6 +25,7 @@
 	<body>
 
 		<script src="js/three.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
 
 		<script src="js/controls/OrbitControls.js"></script>
 
@@ -181,7 +182,56 @@
 				
 				sphereMesh = new THREE.Mesh( geometry, sphereMaterial );
 
-				scene.add( sphereMesh );
+			//	scene.add( sphereMesh );
+				
+				
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+
+
+				// ONJ model
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+
+				var onError = function ( xhr ) {
+				};
+
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'models/flat.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							//child.material.map = texture;
+							child.material = sphereMaterial;
+		                    child.geometry.verticesNeedUpdate = true;
+		                    //mesh.geometry.computeCentroids();
+		                    child.geometry.computeFaceNormals();
+		                    child.geometry.computeVertexNormals();
+							
+						   console.log( child);
+						}
+					} );
+					
+					
+                  
+					
+					
+					object.scale.set(20,20,20);
+					object.position.y = - 10000;
+					object.position.x = - 10000;
+					console.log(object);
+					
+					scene.add( object );
+
+				}, onProgress, onError );
+
+				//
 
 				//
 

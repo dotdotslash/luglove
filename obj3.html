@@ -30,10 +30,10 @@
 		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - OBJLoader test
 		</div>
 
-		<script src="js/three.min.js"></script>
-		<script src="js/OBJLoader.js"></script>
-		<script src="js/dat.gui.min.js"></script>
-		<script src="js/ImprovedNoise.js"></script>
+		<script src="js/three.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
+		<script src="js/libs/dat.gui.min.js"></script>
+		<script src="js-helpers/ImprovedNoise.js"></script>
 
 
         <script type="x-shader/x-vertex" id="vertexshader">
@@ -281,7 +281,7 @@
 	                    resolution: { type: 'v2', value: new THREE.Vector2( 0, 0 ) },
 	                    bkgResolution: { type: 'v2', value: new THREE.Vector2( 0, 0 ) },
 	                    lightPosition: { type: 'v3', value: new THREE.Vector3( -100, 100, 0 ) },
-	                    hatch1: { type: 't', value: THREE.ImageUtils.loadTexture( 'assets/' + id + '0.jpg' ) },
+	                    hatch1: { type: 't', value: THREE.TextureLoader( 'assets/' + id + '0.jpg' ) },
 	                    hatch2: { type: 't', value: THREE.ImageUtils.loadTexture( 'assets/' + id + '1.jpg' ) },
 	                    hatch3: { type: 't', value: THREE.ImageUtils.loadTexture( 'assets/' + id + '2.jpg' ) },
 	                    hatch4: { type: 't', value: THREE.ImageUtils.loadTexture( 'assets/' + id + '3.jpg' ) },
@@ -333,7 +333,6 @@
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-//				loader.load( 'models/tree.obj', function ( object ) {
 				loader.load( 'models/flat.obj', function ( object ) {
 
 					object.traverse( function ( child ) {
@@ -345,7 +344,6 @@
 		                    //mesh.geometry.computeCentroids();
 		                    child.geometry.computeFaceNormals();
 		                    child.geometry.computeVertexNormals();
-		                   // child.uniforms.repeat.value.set( 4, 4 );
 							
 						   console.log( child);
 						}
